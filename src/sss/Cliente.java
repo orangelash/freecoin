@@ -138,7 +138,7 @@ public class Cliente {
 
                 String line = null;
                 System.out.println("aqui");
-                //line = bufferedReader.readLine();System.out.println("aquii");
+                line = bufferedReader.readLine();System.out.println("aquii");
                 while (!bufferedReader.readLine().isEmpty()) {System.out.println("aquiii");
                     line = bufferedReader.readLine();
                     System.out.println("Mensagem do Servidor : " + line);
