@@ -137,8 +137,9 @@ public class Cliente {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
                 String line = null;
-                line = bufferedReader.readLine();
-                while (!bufferedReader.readLine().isEmpty()) {
+                System.out.println("aqui");
+                //line = bufferedReader.readLine();System.out.println("aquii");
+                while (!bufferedReader.readLine().isEmpty()) {System.out.println("aquiii");
                     line = bufferedReader.readLine();
                     System.out.println("Mensagem do Servidor : " + line);
                     queue.put(line);
