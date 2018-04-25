@@ -20,6 +20,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.security.KeyStore;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -37,6 +38,11 @@ public class Cliente {
     private String host = "192.168.137.46";
     private int port = 9999;
 
+     public static void main(String[] args) {
+        BlockingQueue<String> q = new LinkedBlockingQueue<String>();
+        Cliente clientRecebe = new Cliente(q);
+        clientRecebe.run();
+    }
     public static int enviarecebe = 0;
 
     Cliente(BlockingQueue<String> q) {
@@ -98,6 +104,7 @@ public class Cliente {
 
             System.out.println("SSL client started");
             new ClientThread(sslSocket, queue).start();
+            new ClientThreadEnvia(sslSocket, queue).start();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -167,6 +174,104 @@ public class Cliente {
                 /* printWriter.println("");
                 printWriter.println();
                 printWriter.flush();*/
+                sslSocket.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    static class ClientThreadEnvia extends Thread {
+
+        public SSLSocket sslSocket = null;
+        private final BlockingQueue<String> queue;
+
+        ClientThreadEnvia(SSLSocket sslSocket, BlockingQueue<String> q) {
+            this.sslSocket = sslSocket;
+            queue = q;
+        }
+
+        public void run() {
+            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+
+            try {
+                // Start handshake
+                sslSocket.startHandshake();
+
+                // Get session after the connection is established
+                SSLSession sslSession = sslSocket.getSession();
+
+                /*  System.out.println("SSLSession :");
+                System.out.println("\tProtocol : "+sslSession.getProtocol());
+                System.out.println("\tCipher suite : "+sslSession.getCipherSuite());*/
+                // Start handling application content
+                InputStream inputStream = sslSocket.getInputStream();
+                OutputStream outputStream = sslSocket.getOutputStream();
+
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+
+
+                int opc = 0;
+                do {
+                    String value ="";
+                    if (!queue.isEmpty()) {
+                        while (!queue.isEmpty()) {
+                            value = queue.take();
+                            System.out.println(value);
+                           
+                        }
+                    }
+
+                    System.out.println("-----BEM-VINDO AO FR€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
+                    //while(opc=0){
+                        opc = Ler.umInt();
+                   // }
+                    
+                    
+                    // while (!value.isEmpty()) {
+                    //System.out.println
+                    //  (Thread.currentThread().getName()+": " + value );
+                    /*
+              do something with value
+                     */
+  
+                  
+                    // }
+                    switch (opc) {
+                        case 1: {
+                            System.out.println("registo");
+                            String aux = Ler.umaString();
+                            printWriter.println(aux);
+                            printWriter.flush();
+                            break;
+                        }
+                        case 2: {
+                            System.out.println("entrar");
+                            break;
+                        }
+
+                        case 0:
+                            System.exit(0);
+                            //queue.put(opc+"");
+                            break;
+                        default:
+                            System.out.println("Opção inválida, tente novamente!\n");
+                    }
+                    if (!queue.isEmpty()) {
+                        while (!queue.isEmpty()) {
+                            value = queue.take();
+                            System.out.println(value);
+                        }
+                    }
+                    
+                } while (opc != 0);
+                // }
+
+                /*printWriter.println("");
+                printWriter.println();
+                printWriter.flush();*/
+              
                 sslSocket.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
