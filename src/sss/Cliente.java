@@ -12,7 +12,6 @@ package sss;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -131,33 +130,19 @@ public class Cliente {
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
-                /*  System.out.println("SSLSession :");
-                System.out.println("\tProtocol : "+sslSession.getProtocol());
-                System.out.println("\tCipher suite : "+sslSession.getCipherSuite());*/
-                // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
 
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
-                // Write data/
-                /* String aux = Ler.umaString();
-                printWriter.println("Inut : "+aux);*/
- /*    String line = null;
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println("Mensagem do Servidor : " + line);
-
-                }*/
                 String line = null;
                 line = bufferedReader.readLine();
                 while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
-                    System.out.println("aqui");
                     System.out.println("Mensagem do Servidor : " + line);
                     queue.put(line);
                     System.out.println(line);
-                    System.out.println("passei");
 
                 }
                 String value = "";
@@ -171,9 +156,6 @@ public class Cliente {
                     }
                 }
 
-                /* printWriter.println("");
-                printWriter.println();
-                printWriter.flush();*/
                 sslSocket.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -201,9 +183,7 @@ public class Cliente {
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
-                /*  System.out.println("SSLSession :");
-                System.out.println("\tProtocol : "+sslSession.getProtocol());
-                System.out.println("\tCipher suite : "+sslSession.getCipherSuite());*/
+              
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
@@ -224,20 +204,7 @@ public class Cliente {
                     }
 
                     System.out.println("-----BEM-VINDO AO FR€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
-                    //while(opc=0){
-                        opc = Ler.umInt();
-                   // }
-                    
-                    
-                    // while (!value.isEmpty()) {
-                    //System.out.println
-                    //  (Thread.currentThread().getName()+": " + value );
-                    /*
-              do something with value
-                     */
-  
-                  
-                    // }
+                    opc = Ler.umInt();
                     switch (opc) {
                         case 1: {
                             System.out.println("registo");
@@ -253,7 +220,6 @@ public class Cliente {
 
                         case 0:
                             System.exit(0);
-                            //queue.put(opc+"");
                             break;
                         default:
                             System.out.println("Opção inválida, tente novamente!\n");
@@ -266,11 +232,6 @@ public class Cliente {
                     }
                     
                 } while (opc != 0);
-                // }
-
-                /*printWriter.println("");
-                printWriter.println();
-                printWriter.flush();*/
               
                 sslSocket.close();
             } catch (Exception ex) {

@@ -10,7 +10,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import static java.lang.Thread.sleep;
+import java.math.BigInteger;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -152,7 +154,7 @@ System.out.println("33333");
      static class ServerThreadEnvia extends Thread {
 
         private SSLSocket sslSocket = null;
-
+        public SecureRandom random = new SecureRandom();
         ServerThreadEnvia(SSLSocket sslSocket) {
             this.sslSocket = sslSocket;
         }
@@ -178,23 +180,13 @@ System.out.println("33333");
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
-                    printWriter.print("HTTP/1.1 200\r\n");
-                    printWriter.print("lolada");
+                    String k = new BigInteger(400, random).toString(32);
+                    System.out.println(k);
+                    printWriter.print("Novo desafio " + k);
                     printWriter.flush();
-                    sleep(3000);
+                    sleep(30000);
                 }
 
-      /*          String line = null;
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println("Inut : " + line);
-
-                    if (line.trim().equals("007")) {
-                        break;
-                    }
-                }
-
-                // Write data
-                sslSocket.close();*/
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
