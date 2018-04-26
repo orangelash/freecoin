@@ -34,7 +34,7 @@ public class Cliente {
 
     private final BlockingQueue<String> queue;
 
-    private String host = "192.168.137.46";
+    private String host = "192.168.137.1";
     private int port = 9999;
 
     public static void main(String[] args) {
@@ -121,57 +121,58 @@ public class Cliente {
         }
 
         public void run() {
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-
-            try {
-                // Start handshake
-                sslSocket.startHandshake();
-
-                // Get session after the connection is established
-                SSLSession sslSession = sslSocket.getSession();
-
-                // Start handling application content
-                InputStream inputStream = sslSocket.getInputStream();
-                OutputStream outputStream = sslSocket.getOutputStream();
-
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                while (true) {
-                    String line = null;
-                    System.out.println("aqui");
-
-                    //line = bufferedReader.readLine();
-                    //System.out.println("oi");
-                    System.out.println("aquii");
-                  //  while (!bufferedReader.readLine().isEmpty()) {
-                        System.out.println("aquiii");
-                        line = bufferedReader.readLine();
-                        System.out.println("Mensagem do Servidor : " + line);
-                        queue.put(line);
-                        
-
-                  //  }
-                    System.out.println("passei");
-                    String value = "";
-                    if (!queue.isEmpty()) {
-                        while (!queue.isEmpty()) {
-                            value = queue.take();
-                            if (value.equals('0')) {
-                                sslSocket.close();
-                                break;
-
-                            }
-
-                        }
-                    }
-                }
-                // sslSocket.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
+             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+ 
+             try {
+                 // Start handshake
+                 sslSocket.startHandshake();
+ 
+                 // Get session after the connection is established
+                 SSLSession sslSession = sslSocket.getSession();
+ 
+                 // Start handling application content
+                 InputStream inputStream = sslSocket.getInputStream();
+                 OutputStream outputStream = sslSocket.getOutputStream();
+ 
+                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                 while (true) {
+                     String line = null;
+                     System.out.println("aqui");
+ 
+                     //line = bufferedReader.readLine();
+                     //System.out.println("oi");
+                     System.out.println("aquii");
+                   //  while (!bufferedReader.readLine().isEmpty()) {
+                         System.out.println("aquiii");
+                         line = bufferedReader.readLine();
+                         System.out.println("Mensagem do Servidor : " + line);
+                         queue.put(line);
+                         
+ 
+                   //  }
+                     System.out.println("passei");
+                     String value = "";
+                     if (!queue.isEmpty()) {
+                         while (!queue.isEmpty()) {
+                             value = queue.take();
+                             if (value.equals('0')) {
+                                 sslSocket.close();
+                                 break;
+ 
+                             }
+ 
+                         }
+                     }
+                     sleep(300);
+                 }
+                 // sslSocket.close();
+             } catch (Exception ex) {
+                 ex.printStackTrace();
+             }
+         }
+     }
 
     static class ClientThreadEnvia extends Thread {
 
