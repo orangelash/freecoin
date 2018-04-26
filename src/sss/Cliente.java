@@ -34,10 +34,10 @@ public class Cliente {
 
     private final BlockingQueue<String> queue;
 
-    private String host = "192.168.137.46";
+    private String host = "192.168.137.1";
     private int port = 9999;
 
-     public static void main(String[] args) {
+    public static void main(String[] args) {
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
         Cliente clientRecebe = new Cliente(q);
         clientRecebe.run();
@@ -122,6 +122,7 @@ public class Cliente {
 
         public void run() {
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
 
             try {
                 // Start handshake
@@ -130,40 +131,48 @@ public class Cliente {
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
+                // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
 
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                while (true) {
+                    String line = null;
+                    System.out.println("aqui");
 
-                String line = null;
-                System.out.println("aqui");
-                line = bufferedReader.readLine();System.out.println("aquii");
-                while (!bufferedReader.readLine().isEmpty()) {System.out.println("aquiii");
-                    line = bufferedReader.readLine();
-                    System.out.println("Mensagem do Servidor : " + line);
-                    queue.put(line);
-                    System.out.println(line);
+                    //line = bufferedReader.readLine();
+                    //System.out.println("oi");
+                    System.out.println("aquii");
+                  //  while (!bufferedReader.readLine().isEmpty()) {
+                        System.out.println("aquiii");
+                        line = bufferedReader.readLine();
+                        System.out.println("Mensagem do Servidor : " + line);
+                        queue.put(line);
+                        
 
-                }
-                String value = "";
-                if (!queue.isEmpty()) {
-                    while (!queue.isEmpty()) {
-                        value = queue.take();
-                        if (value.equals('0')) {
-                            sslSocket.close();
+                  //  }
+                    System.out.println("passei");
+                    String value = "";
+                    if (!queue.isEmpty()) {
+                        while (!queue.isEmpty()) {
+                            value = queue.take();
+                            if (value.equals('0')) {
+                                sslSocket.close();
+                                break;
+
+                            }
+
                         }
-
                     }
                 }
-
-                sslSocket.close();
+                // sslSocket.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
-    
+
     static class ClientThreadEnvia extends Thread {
 
         public SSLSocket sslSocket = null;
@@ -184,7 +193,6 @@ public class Cliente {
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
-              
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
@@ -192,15 +200,14 @@ public class Cliente {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
-
                 int opc = 0;
                 do {
-                    String value ="";
+                    String value = "";
                     if (!queue.isEmpty()) {
                         while (!queue.isEmpty()) {
                             value = queue.take();
                             System.out.println(value);
-                           
+
                         }
                     }
 
@@ -231,9 +238,9 @@ public class Cliente {
                             System.out.println(value);
                         }
                     }
-                    
+
                 } while (opc != 0);
-              
+
                 sslSocket.close();
             } catch (Exception ex) {
                 ex.printStackTrace();

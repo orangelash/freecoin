@@ -1,6 +1,5 @@
 package sss;
 
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -11,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import static java.lang.Thread.sleep;
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
@@ -28,11 +28,11 @@ public class Servidor {
 
     private int port = 9999;
     private boolean isServerDone = false;
+
     public static void main(String[] args) {
-        Servidor servidor=new Servidor();
+        Servidor servidor = new Servidor();
         servidor.run();
 
-        
     }
 
     Servidor() {
@@ -43,7 +43,8 @@ public class Servidor {
     }
 
     // Create the and initialize the SSLContext
-    private SSLContext createSSLContext() { System.out.println("3");
+    private SSLContext createSSLContext() {
+        System.out.println("3");
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null, null);
@@ -82,7 +83,7 @@ public class Servidor {
     // Start to run the server
     public void run() {
         SSLContext sslContext = this.createSSLContext();
- 
+
         try {
             // Create server socket factory
             SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
@@ -90,12 +91,14 @@ public class Servidor {
             // Create server socket
             SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(this.port);
 
-            System.out.println("SSL server started");System.out.println("333");
+            System.out.println("SSL server started");
+            System.out.println("333");
             while (!isServerDone) {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
-System.out.println("33333");
+                System.out.println("33333");
                 // Start the server thread
-                new ServerThread(sslSocket).start();System.out.println("3333");
+                new ServerThread(sslSocket).start();
+                System.out.println("3333");
                 new ServerThreadEnvia(sslSocket).start();
             }
         } catch (Exception ex) {
@@ -112,7 +115,8 @@ System.out.println("33333");
             this.sslSocket = sslSocket;
         }
 
-        public void run() {System.out.println("333");
+        public void run() {
+            System.out.println("333");
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
 
             try {
@@ -135,8 +139,10 @@ System.out.println("33333");
 
                 System.out.println("1");
                 String line = null;
-                while ((line = bufferedReader.readLine()) != null) {System.out.println("2");
-                    System.out.println("Inut : " + line);
+                while ((line = bufferedReader.readLine()) != null) {
+                    System.out.println("2");
+                    String inetAddress = sslSocket.getInetAddress().getHostName();
+                    System.out.println("Inut : " + line + " ," + inetAddress);
 
                     if (line.trim().equals("007")) {
                         break;
@@ -150,11 +156,12 @@ System.out.println("33333");
             }
         }
     }
-    
-     static class ServerThreadEnvia extends Thread {
+
+    static class ServerThreadEnvia extends Thread {
 
         private SSLSocket sslSocket = null;
         public SecureRandom random = new SecureRandom();
+
         ServerThreadEnvia(SSLSocket sslSocket) {
             this.sslSocket = sslSocket;
         }
@@ -169,24 +176,21 @@ System.out.println("33333");
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
-                System.out.println("SSLSession :");
-                System.out.println("\tProtocol : " + sslSession.getProtocol());
-                System.out.println("\tCipher suite : " + sslSession.getCipherSuite());
-
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
 
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                while (true) {
+                System.out.println("estou aqui 1");
+                while (true) {System.out.println("estou aqui 2");
                     String k = new BigInteger(400, random).toString(32);
                     System.out.println(k);
-                    printWriter.print("Novo desafio: "+k);
-                    printWriter.print("lolada");
+                    printWriter.println(k);
                     printWriter.flush();
                     sleep(30000);
                 }
+
 
             } catch (Exception ex) {
                 ex.printStackTrace();
