@@ -198,16 +198,10 @@ public class Servidor {
                     System.out.println("estou aqui 2");
 
                     String k = new BigInteger(400, random).toString(32);
-                    /*System.out.println(k);
+                    System.out.println(k);
                     printWriter.println(k);
-                    printWriter.flush();*/
-                    for (int i = 0; i < clients.size(); i++) {
-                        OutputStream outputStreamAll = clients.get(i).accept().getOutputStream();
-                        PrintWriter printWriterAll = new PrintWriter(new OutputStreamWriter(outputStreamAll));
-                        printWriterAll.println(k);
-                        printWriterAll.flush();
-                        clients.get(i).close();
-                    }
+                    printWriter.flush();System.out.println("estou aqui 3");
+                   
                     sleep(30000);
                 }
 
