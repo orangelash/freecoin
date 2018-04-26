@@ -11,8 +11,11 @@ import java.io.PrintWriter;
 import static java.lang.Thread.sleep;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -28,6 +31,7 @@ public class Servidor {
 
     private int port = 9999;
     private boolean isServerDone = false;
+    List<SSLServerSocket> clients;
 
     public static void main(String[] args) {
         Servidor servidor = new Servidor();
@@ -36,6 +40,7 @@ public class Servidor {
     }
 
     Servidor() {
+        clients = new ArrayList<SSLServerSocket>();
     }
 
     Servidor(int port) {
@@ -74,6 +79,7 @@ public class Servidor {
 
             return sslContext;
         } catch (Exception ex) {
+            System.out.println("foi neste que rebentou 1");
             ex.printStackTrace();
         }
 
@@ -95,13 +101,15 @@ public class Servidor {
             System.out.println("333");
             while (!isServerDone) {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
+                clients.add(sslServerSocket);
                 System.out.println("33333");
                 // Start the server thread
                 new ServerThread(sslSocket).start();
                 System.out.println("3333");
-                new ServerThreadEnvia(sslSocket).start();
+                new ServerThreadEnvia(sslSocket, clients).start();
             }
         } catch (Exception ex) {
+            System.out.println("foi neste que rebentou 2");
             ex.printStackTrace();
         }
     }
@@ -152,6 +160,7 @@ public class Servidor {
                 // Write data
                 sslSocket.close();
             } catch (Exception ex) {
+                System.out.println("foi neste que rebentou 3");
                 ex.printStackTrace();
             }
         }
@@ -161,9 +170,11 @@ public class Servidor {
 
         private SSLSocket sslSocket = null;
         public SecureRandom random = new SecureRandom();
+        List<SSLServerSocket> clients;
 
-        ServerThreadEnvia(SSLSocket sslSocket) {
+        ServerThreadEnvia(SSLSocket sslSocket, List<SSLServerSocket> clients) {
             this.sslSocket = sslSocket;
+            this.clients = clients;
         }
 
         public void run() {
@@ -183,16 +194,25 @@ public class Servidor {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 System.out.println("estou aqui 1");
-                while (true) {System.out.println("estou aqui 2");
+                while (true) {
+                    System.out.println("estou aqui 2");
+
                     String k = new BigInteger(400, random).toString(32);
-                    System.out.println(k);
+                    /*System.out.println(k);
                     printWriter.println(k);
-                    printWriter.flush();
+                    printWriter.flush();*/
+                    for (int i = 0; i < clients.size(); i++) {
+                        OutputStream outputStreamAll = clients.get(i).accept().getOutputStream();
+                        PrintWriter printWriterAll = new PrintWriter(new OutputStreamWriter(outputStreamAll));
+                        printWriterAll.println(k);
+                        printWriterAll.flush();
+                        clients.get(i).close();
+                    }
                     sleep(30000);
                 }
 
-
             } catch (Exception ex) {
+                System.out.println("foi neste que rebentou 4");
                 ex.printStackTrace();
             }
         }

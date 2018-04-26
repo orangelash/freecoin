@@ -34,7 +34,7 @@ public class Cliente {
 
     private final BlockingQueue<String> queue;
 
-    private String host = "192.168.137.1";
+    private String host = "192.168.137.46";
     private int port = 9999;
 
     public static void main(String[] args) {
