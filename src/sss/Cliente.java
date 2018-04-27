@@ -34,7 +34,7 @@ public class Cliente {
 
     private final BlockingQueue<String> queue;
 
-    private String host = "192.168.137.46";
+    private String host = "192.168.137.1";
     private int port = 9999;
 
     public static void main(String[] args) {
@@ -122,7 +122,7 @@ public class Cliente {
 
         public void run() {
              sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+         //    sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
  
              try {
                  // Start handshake

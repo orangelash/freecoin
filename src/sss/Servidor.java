@@ -29,25 +29,36 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-public class Servidor {
+public class Servidor implements Runnable {
 
     public SecureRandom random = new SecureRandom();
     private int port = 9999;
     private boolean isServerDone = false;
-    List<SSLSocket> clients;
+    public static ArrayList<SSLSocket> clients=new ArrayList<SSLSocket>();
 
     public static void main(String[] args) {
+        
+        System.out.println("quantas vezes?");
+        ServerThreadEnviaAll myRunnable = new ServerThreadEnviaAll();
+        Thread t = new Thread(myRunnable);
+        t.start();
         Servidor servidor = new Servidor();
         servidor.run();
+        
 
     }
 
     Servidor() {
-        clients = new ArrayList<SSLSocket>();
+        //clients = new ArrayList<SSLSocket>();
+
     }
 
     Servidor(int port) {
         this.port = port;
+        /*ServerThreadEnviaAll myRunnable = new ServerThreadEnviaAll();
+        Thread t = new Thread(myRunnable);
+        t.start();*/
+        // new ServerThreadEnviaAll(clients).start();
     }
 
     // Create the and initialize the SSLContext
@@ -107,12 +118,18 @@ public class Servidor {
                 clients.add(sslSocket);
                 System.out.println("33333");
                 // Start the server thread
-                new ServerThread(sslSocket).start();
+                ServerThread myRunnable3 = new ServerThread(sslSocket);
+                Thread t3 = new Thread(myRunnable3);
+                t3.start();
+                //new ServerThread(sslSocket).start();
                 System.out.println("3333");
-                String k = new BigInteger(400, random).toString(32);
-                new ServerThreadEnvia(sslSocket, clients).start();
+                //String k = new BigInteger(400, random).toString(32);
+                //new ServerThreadEnvia(sslSocket, clients).start();
+                ServerThreadEnvia myRunnable1 = new ServerThreadEnvia(sslSocket);
+                Thread t1 = new Thread(myRunnable1);
+                t1.start();
                 System.out.println("vou para o all");
-                new ServerThreadEnviaAll(clients, k).start();
+
             }
         } catch (Exception ex) {
             System.out.println("foi neste que rebentou 2");
@@ -121,7 +138,7 @@ public class Servidor {
     }
 
     // Thread handling the socket from client
-    static class ServerThread extends Thread {
+    static class ServerThread implements Runnable {
 
         private SSLSocket sslSocket = null;
 
@@ -173,15 +190,15 @@ public class Servidor {
         }
     }
 
-    static class ServerThreadEnvia extends Thread {
+    static class ServerThreadEnvia implements Runnable {
 
         private SSLSocket sslSocket = null;
-        public SecureRandom random = new SecureRandom();
-        List<SSLSocket> clients;
+       // public SecureRandom random = new SecureRandom();
+        //List<SSLSocket> clients;
 
-        ServerThreadEnvia(SSLSocket sslSocket, List<SSLSocket> clients) {
+        ServerThreadEnvia(SSLSocket sslSocket) {
             this.sslSocket = sslSocket;
-            this.clients = clients;
+            //this.clients = clients;
         }
 
         public void run() {
@@ -203,10 +220,10 @@ public class Servidor {
                 System.out.println("estou aqui 1");
 
                 while (true) {
-                    System.out.println("estou aqui 2");
+
                     printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
-                    sleep(30000);
+                    sleep(60000);
                 }
 
             } catch (Exception ex) {
@@ -216,45 +233,55 @@ public class Servidor {
         }
     }
 
-    static class ServerThreadEnviaAll extends Thread {
+    static class ServerThreadEnviaAll implements Runnable {
 
-        private List<SSLSocket> clients = null;
-        private String k = null;
-
-        ServerThreadEnviaAll(List<SSLSocket> clients, String k) {
-            this.clients = clients;
-            this.k = k;
+        // private List<SSLSocket> clients = null;
+        //private String k = null;
+        public ServerThreadEnviaAll() {
+            System.out.println("eiii");
+            // this.clients = clients;
+            // this.k = k;
+            //String k = new BigInteger(400, random).toString(32);
         }
 
         public void run() {
             System.out.println("all");
-            for (int i = 0; i < clients.size(); i++) {
+            while (true) {
+                System.out.println("ola malta");
+               // if() 
+               String k = rand.randomnumber();
+                for (int i = 0; i < clients.size(); i++) {
+                    System.out.println("ola malta2");
+                    clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
+                    System.out.println("ola malta3");
+                    try {
+                        // Start handshake
+                        System.out.println("ola malta4");
+                        clients.get(i).startHandshake();
 
-                clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
+                       
+                        // Get session after the connection is established
+                        // SSLSession sslSession = clients.get(i).getSession();
+                        OutputStream outputStream = clients.get(i).getOutputStream();
 
+                        System.out.println(k);
+                        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                        printWriter.println(k);
+                        printWriter.flush();
+                        // Write data
+                           //clients.get(i).close();
+                    } catch (Exception ex) {
+                        System.out.println("foi neste que rebentou 66");
+                        ex.printStackTrace();
+                    }
+                }
                 try {
-                    // Start handshake
-                    clients.get(i).startHandshake();
-
-                    // Get session after the connection is established
-                    // SSLSession sslSession = clients.get(i).getSession();
-                    OutputStream outputStream = clients.get(i).getOutputStream();
-                    System.out.println(k);
-                    PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                    printWriter.println(k);
-                    printWriter.flush();
-                    // Write data
-                    clients.get(i).close();
-                } catch (Exception ex) {
-                    System.out.println("foi neste que rebentou 66");
-                    ex.printStackTrace();
+                    sleep(3000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            try {
-                sleep(3000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            //stop();
         }
     }
 
