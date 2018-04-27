@@ -183,8 +183,9 @@ public class Servidor implements Runnable {
                 // Write data
                 sslSocket.close();
             } catch (Exception ex) {
-
+                clients.remove(sslSocket);
                 System.out.println("foi neste que rebentou 3");
+                //APAGAR ESTE
                 ex.printStackTrace();
             }
         }
@@ -269,7 +270,7 @@ public class Servidor implements Runnable {
                         printWriter.println(k);
                         printWriter.flush();
                         // Write data
-                           //clients.get(i).close();
+                          // clients.get(i).close();
                     } catch (Exception ex) {
                         System.out.println("foi neste que rebentou 66");
                         ex.printStackTrace();
