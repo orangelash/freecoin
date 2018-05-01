@@ -12,7 +12,10 @@ import static java.lang.Thread.sleep;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.xml.bind.DatatypeConverter;
 import static sss.VerifyChallenge.verify;
 
 public class Servidor implements Runnable {
@@ -135,6 +139,8 @@ public class Servidor implements Runnable {
             this.sslSocket = sslSocket;
         }
 
+
+
         public void run() {
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
 
@@ -159,14 +165,28 @@ public class Servidor implements Runnable {
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
                     String inetAddress = sslSocket.getInetAddress().getHostName();
-                    String [] recebido= line.split("/");
-                    if(recebido[0].equals("desafio"))
-                    {
-                        boolean res=verify(recebido[3],recebido[1],10);
-                        if(res==true&&desafioslista.contains(recebido[1])){
-                            desafioslista.remove(recebido[1]);
+                    System.out.println(line);
+                    String[] recebido = line.split("/"); 
+                    if (recebido[0].equals("desafio")) {
+                    MessageDigest digest;
+                    try {
+                        digest = MessageDigest.getInstance("SHA-256");
+                        byte[] hash = digest.digest(recebido[1].getBytes(StandardCharsets.UTF_8));
+                        String hex = DatatypeConverter.printHexBinary(hash);
+                        String desafio=hex;
+                        String desafioSolved=recebido[3];
+
+                        boolean res = verify(desafioSolved,desafio,10);
+                        System.out.println(res);
+                        if (res == true && desafioslista.contains(desafio)) {
+                            printWriter.println("desafio/para");
+                            printWriter.flush();
+                            desafioslista.remove(desafio);
                             System.out.println("Parabens ganhas-te 1 freecoin bitch");
                             //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
+                        } 
+                    } catch (NoSuchAlgorithmException ex) {
+                            Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                     System.out.println("Inut : " + line + " ," + inetAddress);
@@ -230,22 +250,22 @@ public class Servidor implements Runnable {
         public ServerThreadEnviaAll() {
         }
 
-        public String convertStringToHex(String str) {
 
-            char[] chars = str.toCharArray();
-
-            StringBuffer hex = new StringBuffer();
-            for (int i = 0; i < chars.length; i++) {
-                hex.append(Integer.toHexString((int) chars[i]));
-            }
-
-            return hex.toString();
-        }
 
         public void run() {
             while (true) {
                 String k = rand.randomnumber();
-                desafioslista.add(convertStringToHex(k));
+                MessageDigest digest;
+                try {
+                    digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(k.getBytes(StandardCharsets.UTF_8));
+                    String hex = DatatypeConverter.printHexBinary(hash);
+
+                    System.out.println(hex);
+                    desafioslista.add(hex);
+                } catch (NoSuchAlgorithmException ex) {
+                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 for (int i = 0; i < clients.size(); i++) {
                     clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
                     try {
@@ -259,7 +279,7 @@ public class Servidor implements Runnable {
 
                         System.out.println(k);
                         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                        printWriter.println(k);
+                        printWriter.println("desafio/"+k);
                         printWriter.flush();
                         // Write data
                         // clients.get(i).close();

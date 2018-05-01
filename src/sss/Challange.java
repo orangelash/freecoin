@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 package sss;
-
+/*
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -16,7 +16,7 @@ import javax.xml.bind.DatatypeConverter;
  *
  * @author Asus
  */
-public class Challange {
+/*public class Challange {
 
     public static String hash;
     public static String previousHash;
@@ -37,7 +37,7 @@ public class Challange {
             s1 = s1 + String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
 
         }*/
-        int foudIt = 0;
+      /*  int foudIt = 0;
         
       
         while (foudIt == 0) {
@@ -96,3 +96,4 @@ public class Challange {
   
 
 }
+*/

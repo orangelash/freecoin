@@ -17,7 +17,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -29,7 +34,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import static sss.Challange.challengeSolve;
+import javax.xml.bind.DatatypeConverter;
 
 public class Cliente {
 
@@ -112,8 +117,14 @@ public class Cliente {
     // Thread handling the socket to server
     static class ClientThread extends Thread {
 
+        public static String hash;
+        public static String previousHash;
+        private static String data; //our data will be a simple message.
+        private static long timeStamp; //as number of milliseconds since 1/1/1970.
+        private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
+        private static int bits=15;
 
         ClientThread(SSLSocket sslSocket, BlockingQueue<String> q) {
             this.sslSocket = sslSocket;
@@ -121,53 +132,114 @@ public class Cliente {
         }
 
         public void run() {
-             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
- 
-             try {
-                 // Start handshake
-                 sslSocket.startHandshake();
- 
-                 // Get session after the connection is established
-                 SSLSession sslSession = sslSocket.getSession();
- 
-                 // Start handling application content
-                 InputStream inputStream = sslSocket.getInputStream();
-                 OutputStream outputStream = sslSocket.getOutputStream();
- 
-                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                 while (true) {
-                     String line = null;
-                   //  while (!bufferedReader.readLine().isEmpty()) {
-                         line = bufferedReader.readLine();
-                         System.out.println("Novo desafio: " + line);
-                         String hashsolved=challengeSolve(line,15);
-                         System.out.println(hashsolved);
-                         printWriter.println("desafio/"+line+"/resolvido/"+hashsolved+sslSocket.getLocalAddress());
-                            printWriter.flush();
-                         queue.put(hashsolved);
-                        
-                   //  }
-                     String value = "";
-                     if (!queue.isEmpty()) {
-                         while (!queue.isEmpty()) {
-                             value = queue.take();
-                             if (value.equals('0')) {
-                                 sslSocket.close();
-                                 break;
- 
-                             }
- 
-                         }
-                     }
-                     sleep(300);
-                 }
-                 // sslSocket.close();
-             } catch (Exception ex) {
-                 ex.printStackTrace();
-             }
-         }
-     }
+            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+
+            try {
+                // Start handshake
+                sslSocket.startHandshake();
+
+                // Get session after the connection is established
+                SSLSession sslSession = sslSocket.getSession();
+
+                // Start handling application content
+                InputStream inputStream = sslSocket.getInputStream();
+                OutputStream outputStream = sslSocket.getOutputStream();
+
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                while (true) {
+                    String line = null;
+                    //  while (!bufferedReader.readLine().isEmpty()) {
+                    line = bufferedReader.readLine();
+                    String[] server = line.split("/");
+                    if (server[0].equals("desafio")) {
+                        System.out.println("Novo desafio: " + line);
+                        SecureRandom random = new SecureRandom();
+                        String k = new BigInteger(400, random).toString(32);
+                        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                        byte[] hash = digest.digest(server[1].getBytes(StandardCharsets.UTF_8));
+                        String hex = DatatypeConverter.printHexBinary(hash);
+                        System.out.println("O hash do desafio: " + hex);
+                        int foudIt = 0;
+
+                        while (foudIt == 0) {
+                            nonce++;
+                            String calculatehash = previousHash + Long.toString(timeStamp) + Integer.toString(nonce) + data;
+                            byte[] hashdes = digest.digest(calculatehash.getBytes(StandardCharsets.UTF_8));
+                            previousHash = DatatypeConverter.printHexBinary(hashdes);
+                            String s1 = "";
+                            String s2 = "";
+                            int flag = 0;
+                            int count = 0;
+                            line = bufferedReader.readLine();
+                            String[] para=line.split("/");
+                            if(para[0].equals("desafio")&&para[1].equals("para"))
+                                break;
+                            // System.out.println("tentando");
+                            for (int i = 0; i <= bits; i++) {
+                                byte b1 = hash[i];
+                                byte b2 = hashdes[i];
+                                s1 = String.format("%8s", Integer.toBinaryString(b2 & 0xFF)).replace(' ', '0');
+                                s2 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
+                                String[] arys1 = s1.split("");
+                                String[] arys2 = s2.split("");
+                                System.out.println(s1);
+                                System.out.println(s2);
+                                for (int j = 0; j < arys1.length; j++) {
+                                    if (!arys1[j].equals(arys2[j])) {
+                                        System.out.println("nobrak");
+                                        if (count >= bits) {
+                                            break;
+                                        } else {
+                                            flag = 1;
+                                            break;
+                                        }
+
+                                    }
+                                    count++;
+
+                                }
+
+                                if (count >= bits && flag == 0) {
+                                    System.out.println("encontrei");
+                                    foudIt = 1;
+                                    break;
+                                }
+                                if (flag == 1) {
+                                    break;
+                                }
+
+                            }
+
+                        }
+                        String hashsolved = previousHash;
+                        System.out.println(hashsolved);
+                        printWriter.println("desafio/" + line + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
+                        printWriter.flush();
+                        //queue.put(hashsolved);
+                    }
+
+                    //  }
+                    String value = "";
+                    if (!queue.isEmpty()) {
+                        while (!queue.isEmpty()) {
+                            value = queue.take();
+                            if (value.equals('0')) {
+                                sslSocket.close();
+                                break;
+
+                            }
+
+                        }
+                    }
+                    sleep(300);
+                }
+                // sslSocket.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 
     static class ClientThreadEnvia extends Thread {
 
@@ -203,7 +275,7 @@ public class Cliente {
                         while (!queue.isEmpty()) {
                             value = queue.take();
                             System.out.println(value);
-                            printWriter.println("desafio/"+value+"/"+sslSocket.getLocalAddress());
+                            printWriter.println("desafio/" + value + "/" + sslSocket.getLocalAddress());
                             printWriter.flush();
                             System.out.println(value);
 

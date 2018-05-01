@@ -11,7 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
-import static sss.Challange.previousHash;
+
 
 /**
  *
@@ -20,17 +20,26 @@ import static sss.Challange.previousHash;
 public class VerifyChallenge {
 
     public static String hexToBinary(String hex) {
-        int i = Integer.parseInt(hex, 16);
-        String bin = Integer.toBinaryString(i);
-        return bin;
+        byte[] b = new BigInteger(hex, 16).toByteArray();
+        String s1 = "";
+        for (int i = 0; i < b.length; i++) {
+            byte b1 = b[i];
+            s1 = s1 + String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
+
+        }
+
+      
+        return s1;
     }
 
     public static Boolean verify(String hexaV, String hexaD, int bits) throws NoSuchAlgorithmException {
         String binarioV = hexToBinary(hexaV);
         String binarioD = hexToBinary(hexaD);
+        System.out.println(binarioV);
+        System.out.println(binarioD);
         String[] arys1 = binarioV.split("");
         String[] arys2 = binarioD.split("");
-        for (int i = 0; i <= bits; i++) {
+        for (int i = 0; i < bits; i++) {
             if (!arys1[i].equals(arys2[i])) {
                 return false;
             }
