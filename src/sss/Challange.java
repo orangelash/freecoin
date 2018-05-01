@@ -11,19 +11,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
-
 /**
  *
  * @author Asus
  */
 /*public class Challange {
-
     public static String hash;
     public static String previousHash;
     private static String data; //our data will be a simple message.
     private static long timeStamp; //as number of milliseconds since 1/1/1970.
     private static int nonce;
-
     public static String challengeSolve(String text, int bits) throws NoSuchAlgorithmException {
         SecureRandom random = new SecureRandom();
         String k = new BigInteger(400, random).toString(32);
@@ -35,7 +32,6 @@ import javax.xml.bind.DatatypeConverter;
         for (int i = 0; i < hash.length; i++) {
             byte b1 = hash[i];
             s1 = s1 + String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
-
         }*/
       /*  int foudIt = 0;
         
@@ -82,18 +78,13 @@ import javax.xml.bind.DatatypeConverter;
                 }
                 if(flag==1)
                     break;
-
             }
-
         }
         
      
         System.out.println("\n");
-
         return previousHash;
     }
-
   
-
 }
 */

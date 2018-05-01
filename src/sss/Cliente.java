@@ -171,7 +171,13 @@ public class Cliente {
                             String s2 = "";
                             int flag = 0;
                             int count = 0;
-                            line = bufferedReader.readLine();
+
+                           
+                            if(bufferedReader.equals("")){
+                                System.out.println("ola");
+                                line = bufferedReader.readLine();
+                            }
+                                
                             String[] para=line.split("/");
                             if(para[0].equals("desafio")&&para[1].equals("para"))
                                 break;
