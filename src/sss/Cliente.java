@@ -220,7 +220,7 @@ public class Cliente {
                         }
                         String hashsolved = previousHash;
                         System.out.println(hashsolved);
-                        printWriter.println("desafio/" + line + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
+                        printWriter.println(line + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
                         printWriter.flush();
                         //queue.put(hashsolved);
                     }

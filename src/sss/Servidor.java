@@ -41,6 +41,8 @@ public class Servidor implements Runnable {
     private boolean isServerDone = false;
     public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
     public static ArrayList<String> desafioslista = new ArrayList<String>();
+    public static boolean estado=false;
+    public static String quemresolveu="";
 
     public static void main(String[] args) {
 
@@ -179,8 +181,9 @@ public class Servidor implements Runnable {
                         boolean res = verify(desafioSolved,desafio,10);
                         System.out.println(res);
                         if (res == true && desafioslista.contains(desafio)) {
-                            printWriter.println("desafio/para");
-                            printWriter.flush();
+                            estado=true;
+                            quemresolveu=sslSocket.getInetAddress().getHostAddress();
+                            
                             desafioslista.remove(desafio);
                             System.out.println("Parabens ganhas-te 1 freecoin bitch");
                             //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
@@ -266,21 +269,35 @@ public class Servidor implements Runnable {
                 } catch (NoSuchAlgorithmException ex) {
                     Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                int flag=0;
                 for (int i = 0; i < clients.size(); i++) {
                     clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
                     try {
                         // Start handshake
 
                         clients.get(i).startHandshake();
-
+                        OutputStream outputStream = clients.get(i).getOutputStream();
+                        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                         // Get session after the connection is established
                         // SSLSession sslSession = clients.get(i).getSession();
-                        OutputStream outputStream = clients.get(i).getOutputStream();
+                        if(estado==true&&!clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu))
+                        {
+                            printWriter.println("desafio/para");
+                            printWriter.flush();
+                            flag=1;
+                            
+                        }
+                        
 
                         System.out.println(k);
-                        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                       
                         printWriter.println("desafio/"+k);
                         printWriter.flush();
+                        
+                        if(flag==1&&clients.size()-1==i){
+                            estado=false;
+                            quemresolveu="";
+                        }
                         // Write data
                         // clients.get(i).close();
                     } catch (Exception ex) {
