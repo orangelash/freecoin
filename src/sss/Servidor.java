@@ -28,22 +28,23 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import static sss.VerifyChallenge.verify;
 
 public class Servidor implements Runnable {
 
     public SecureRandom random = new SecureRandom();
     private int port = 9999;
     private boolean isServerDone = false;
-    public static ArrayList<SSLSocket> clients=new ArrayList<SSLSocket>();
+    public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
+    public static ArrayList<String> desafioslista = new ArrayList<String>();
 
     public static void main(String[] args) {
-        
+
         ServerThreadEnviaAll myRunnable = new ServerThreadEnviaAll();
         Thread t = new Thread(myRunnable);
         t.start();
         Servidor servidor = new Servidor();
         servidor.run();
-        
 
     }
 
@@ -58,7 +59,7 @@ public class Servidor implements Runnable {
 
     // Create the and initialize the SSLContext
     private SSLContext createSSLContext() {
- 
+
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null, null);
@@ -158,6 +159,16 @@ public class Servidor implements Runnable {
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
                     String inetAddress = sslSocket.getInetAddress().getHostName();
+                    String [] recebido= line.split("/");
+                    if(recebido[0].equals("desafio"))
+                    {
+                        boolean res=verify(recebido[3],recebido[1],10);
+                        if(res==true&&desafioslista.contains(recebido[1])){
+                            desafioslista.remove(recebido[1]);
+                            System.out.println("Parabens ganhas-te 1 freecoin bitch");
+                            //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
+                        }
+                    }
                     System.out.println("Inut : " + line + " ," + inetAddress);
 
                     if (line.trim().equals("007")) {
@@ -202,7 +213,7 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
-                   /* printWriter.println("ola eu sou o server envia particular");
+                    /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
                     sleep(60000);*/
                 }
@@ -215,20 +226,33 @@ public class Servidor implements Runnable {
     }
 
     static class ServerThreadEnviaAll implements Runnable {
+
         public ServerThreadEnviaAll() {
+        }
+
+        public String convertStringToHex(String str) {
+
+            char[] chars = str.toCharArray();
+
+            StringBuffer hex = new StringBuffer();
+            for (int i = 0; i < chars.length; i++) {
+                hex.append(Integer.toHexString((int) chars[i]));
+            }
+
+            return hex.toString();
         }
 
         public void run() {
             while (true) {
-               String k = rand.randomnumber();
+                String k = rand.randomnumber();
+                desafioslista.add(convertStringToHex(k));
                 for (int i = 0; i < clients.size(); i++) {
                     clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
                     try {
                         // Start handshake
-                
+
                         clients.get(i).startHandshake();
 
-                       
                         // Get session after the connection is established
                         // SSLSession sslSession = clients.get(i).getSession();
                         OutputStream outputStream = clients.get(i).getOutputStream();
@@ -238,7 +262,7 @@ public class Servidor implements Runnable {
                         printWriter.println(k);
                         printWriter.flush();
                         // Write data
-                          // clients.get(i).close();
+                        // clients.get(i).close();
                     } catch (Exception ex) {
                         System.out.println("foi neste que rebentou 66");
                         ex.printStackTrace();
@@ -246,7 +270,7 @@ public class Servidor implements Runnable {
                 }
                 try {
                     sleep(30000);
-      
+
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                 }

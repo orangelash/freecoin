@@ -143,7 +143,7 @@ public class Cliente {
                          System.out.println("Novo desafio: " + line);
                          String hashsolved=challengeSolve(line,15);
                          System.out.println(hashsolved);
-                         printWriter.println("desafio/"+hashsolved+sslSocket.getLocalAddress());
+                         printWriter.println("desafio/"+line+"/resolvido/"+hashsolved+sslSocket.getLocalAddress());
                             printWriter.flush();
                          queue.put(hashsolved);
                         
