@@ -174,17 +174,17 @@ public class Cliente {
                             int flag = 0;
                             int count = 0;
 
-                            if (bufferedReader.ready()) {
+                          //  if (bufferedReader.ready()) {
                                 System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                 line = bufferedReader.readLine();
-                            }
 
-                            String[] para = line.split("/");
-                            if (para[0].equals("desafio") && para[1].equals("para")) {
-                               /* printWriter.println("desafio/para");
+                                String[] para = line.split("/");
+                                if (para[0].equals("desafio") && para[1].equals("para")) {
+                                    /* printWriter.println("desafio/para");
                                 printWriter.flush();*/
-                                break;
-                            }
+                                    break;
+                                }
+                          //  }
                             // System.out.println("tentando");
                             for (int i = 0; i <= bits; i++) {
                                 byte b1 = hash[i];

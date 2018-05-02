@@ -42,7 +42,7 @@ public class Servidor implements Runnable {
     public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
-    public static String quemresolveu = "";
+    public static String quemresolveu = null;
     public static int bits = 19;
     static long startTime = 0;
     static long endTime = 0;
@@ -207,7 +207,9 @@ public class Servidor implements Runnable {
             } catch (Exception ex) {
                 clients.remove(sslSocket);
                 System.out.println("foi neste que rebentou 3");
-                flag2=0;
+                if (clients.size() == 0) {
+                    flag2 = 0;
+                }
                 //APAGAR ESTE
                 ex.printStackTrace();
             }
@@ -291,17 +293,20 @@ public class Servidor implements Runnable {
                         OutputStream outputStream = clients.get(i).getOutputStream();
                         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                         InputStream inputStream = clients.get(i).getInputStream();
-          
+                        printWriter.println("./.");
+                        printWriter.flush();
 
                         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                         // Get session after the connection is established
                         // SSLSession sslSession = clients.get(i).getSession();
+                        System.out.println(clients.get(i).getInetAddress().getHostAddress() + ".." + quemresolveu + ".." + estado);
                         if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
                             System.out.println("é para parar bro");
                             endTime = System.currentTimeMillis();
                             printWriter.println("desafio/para");
                             printWriter.flush();
-                           // String l = bufferedReader.readLine();
+                            // String l = bufferedReader.readLine();
+                            estado = false;
                             flag = 1;
 
                         }
@@ -321,8 +326,8 @@ public class Servidor implements Runnable {
                             time = endTime - startTime;
                             endTime = 0;
                             startTime = 0;
-                            estado = false;
-                            quemresolveu = "";
+
+                            quemresolveu = null;
                             flag = 0;
 
                         }
