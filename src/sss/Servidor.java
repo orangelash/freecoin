@@ -43,7 +43,7 @@ public class Servidor implements Runnable {
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = "";
-    public static int bits = 18;
+    public static int bits = 19;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
@@ -207,6 +207,7 @@ public class Servidor implements Runnable {
             } catch (Exception ex) {
                 clients.remove(sslSocket);
                 System.out.println("foi neste que rebentou 3");
+                flag2=0;
                 //APAGAR ESTE
                 ex.printStackTrace();
             }
@@ -296,10 +297,11 @@ public class Servidor implements Runnable {
                         // Get session after the connection is established
                         // SSLSession sslSession = clients.get(i).getSession();
                         if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
+                            System.out.println("é para parar bro");
                             endTime = System.currentTimeMillis();
                             printWriter.println("desafio/para");
                             printWriter.flush();
-                            String l = bufferedReader.readLine();
+                           // String l = bufferedReader.readLine();
                             flag = 1;
 
                         }

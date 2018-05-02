@@ -174,15 +174,15 @@ public class Cliente {
                             int flag = 0;
                             int count = 0;
 
-                            if (bufferedReader.equals("")) {
+                            if (bufferedReader.ready()) {
                                 System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                 line = bufferedReader.readLine();
                             }
 
                             String[] para = line.split("/");
                             if (para[0].equals("desafio") && para[1].equals("para")) {
-                                printWriter.println("desafio/para");
-                                printWriter.flush();
+                               /* printWriter.println("desafio/para");
+                                printWriter.flush();*/
                                 break;
                             }
                             // System.out.println("tentando");
