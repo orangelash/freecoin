@@ -124,7 +124,7 @@ public class Cliente {
         private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
-        private static int bits=15;
+       // private static int bits=15;
 
         ClientThread(SSLSocket sslSocket, BlockingQueue<String> q) {
             this.sslSocket = sslSocket;
@@ -152,7 +152,9 @@ public class Cliente {
                     //  while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
                     String[] server = line.split("/");
+                    
                     if (server[0].equals("desafio")) {
+                        int bits=Integer.parseInt(server[2]);
                         System.out.println("Novo desafio: " + line);
                         SecureRandom random = new SecureRandom();
                         String k = new BigInteger(400, random).toString(32);
@@ -238,7 +240,7 @@ public class Cliente {
 
                         }
                     }
-                    sleep(300);
+                    //sleep(300);
                 }
                 // sslSocket.close();
             } catch (Exception ex) {
