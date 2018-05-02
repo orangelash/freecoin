@@ -243,10 +243,10 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
-                    if (estado == false) {
+                   // if (estado == false) {
                         printWriter.println("./.");
                         printWriter.flush();
-                    }
+                   // }
                     /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
                     sleep(60000);*/
