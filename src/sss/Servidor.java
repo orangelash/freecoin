@@ -1,6 +1,5 @@
 package sss;
 
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,7 +9,18 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import static java.lang.Thread.sleep;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -21,19 +31,32 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.xml.bind.DatatypeConverter;
+import static sss.VerifyChallenge.verify;
 
-public class Servidor {
+public class Servidor implements Runnable {
 
+    public SecureRandom random = new SecureRandom();
     private int port = 9999;
     private boolean isServerDone = false;
+    public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
+    public static ArrayList<String> desafioslista = new ArrayList<String>();
+    public static boolean estado=false;
+    public static String quemresolveu="";
+
     public static void main(String[] args) {
-        Servidor servidor=new Servidor();
+
+        ServerThreadEnviaAll myRunnable = new ServerThreadEnviaAll();
+        Thread t = new Thread(myRunnable);
+        t.start();
+        Servidor servidor = new Servidor();
         servidor.run();
 
-        
     }
 
     Servidor() {
+        //clients = new ArrayList<SSLSocket>();
+
     }
 
     Servidor(int port) {
@@ -41,7 +64,8 @@ public class Servidor {
     }
 
     // Create the and initialize the SSLContext
-    private SSLContext createSSLContext() { System.out.println("3");
+    private SSLContext createSSLContext() {
+
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null, null);
@@ -71,6 +95,7 @@ public class Servidor {
 
             return sslContext;
         } catch (Exception ex) {
+            System.out.println("foi neste que rebentou 1");
             ex.printStackTrace();
         }
 
@@ -80,7 +105,7 @@ public class Servidor {
     // Start to run the server
     public void run() {
         SSLContext sslContext = this.createSSLContext();
- 
+
         try {
             // Create server socket factory
             SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
@@ -88,21 +113,27 @@ public class Servidor {
             // Create server socket
             SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(this.port);
 
-            System.out.println("SSL server started");System.out.println("333");
+            System.out.println("SSL server started");
             while (!isServerDone) {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
-System.out.println("33333");
-                // Start the server thread
-                new ServerThread(sslSocket).start();System.out.println("3333");
-                new ServerThreadEnvia(sslSocket).start();
+                clients.add(sslSocket);
+                ServerThread myRunnable3 = new ServerThread(sslSocket);
+                Thread t3 = new Thread(myRunnable3);
+                t3.start();
+
+                ServerThreadEnvia myRunnable1 = new ServerThreadEnvia(sslSocket);
+                Thread t1 = new Thread(myRunnable1);
+                t1.start();
+
             }
         } catch (Exception ex) {
+            System.out.println("foi neste que rebentou 2");
             ex.printStackTrace();
         }
     }
 
     // Thread handling the socket from client
-    static class ServerThread extends Thread {
+    static class ServerThread implements Runnable {
 
         private SSLSocket sslSocket = null;
 
@@ -110,52 +141,7 @@ System.out.println("33333");
             this.sslSocket = sslSocket;
         }
 
-        public void run() {System.out.println("333");
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
 
-            try {
-                // Start handshake
-                sslSocket.startHandshake();
-
-                // Get session after the connection is established
-                SSLSession sslSession = sslSocket.getSession();
-
-                System.out.println("SSLSession :");
-                System.out.println("\tProtocol : " + sslSession.getProtocol());
-                System.out.println("\tCipher suite : " + sslSession.getCipherSuite());
-
-                // Start handling application content
-                InputStream inputStream = sslSocket.getInputStream();
-                OutputStream outputStream = sslSocket.getOutputStream();
-
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-
-                System.out.println("1");
-                String line = null;
-                while ((line = bufferedReader.readLine()) != null) {System.out.println("2");
-                    System.out.println("Inut : " + line);
-
-                    if (line.trim().equals("007")) {
-                        break;
-                    }
-                }
-                System.out.println("3");
-                // Write data
-                sslSocket.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-    
-     static class ServerThreadEnvia extends Thread {
-
-        private SSLSocket sslSocket = null;
-
-        ServerThreadEnvia(SSLSocket sslSocket) {
-            this.sslSocket = sslSocket;
-        }
 
         public void run() {
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
@@ -177,27 +163,157 @@ System.out.println("33333");
 
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                while (true) {
-                    printWriter.print("HTTP/1.1 200\r\n");
-                    printWriter.print("lolada");
-                    printWriter.flush();
-                    sleep(3000);
-                }
 
-      /*          String line = null;
+                String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println("Inut : " + line);
+                    String inetAddress = sslSocket.getInetAddress().getHostName();
+                    System.out.println(line);
+                    String[] recebido = line.split("/"); 
+                    if (recebido[0].equals("desafio")) {
+                    MessageDigest digest;
+                    try {
+                        digest = MessageDigest.getInstance("SHA-256");
+                        byte[] hash = digest.digest(recebido[1].getBytes(StandardCharsets.UTF_8));
+                        String hex = DatatypeConverter.printHexBinary(hash);
+                        String desafio=hex;
+                        String desafioSolved=recebido[3];
+
+                        boolean res = verify(desafioSolved,desafio,10);
+                        System.out.println(res);
+                        if (res == true && desafioslista.contains(desafio)) {
+                            estado=true;
+                            quemresolveu=sslSocket.getInetAddress().getHostAddress();
+                            
+                            desafioslista.remove(desafio);
+                            System.out.println("Parabens ganhas-te 1 freecoin bitch");
+                            //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
+                        } 
+                    } catch (NoSuchAlgorithmException ex) {
+                            Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    System.out.println("Inut : " + line + " ," + inetAddress);
 
                     if (line.trim().equals("007")) {
                         break;
                     }
                 }
-
                 // Write data
-                sslSocket.close();*/
+                sslSocket.close();
             } catch (Exception ex) {
+                clients.remove(sslSocket);
+                System.out.println("foi neste que rebentou 3");
+                //APAGAR ESTE
                 ex.printStackTrace();
             }
         }
     }
+
+    static class ServerThreadEnvia implements Runnable {
+
+        private SSLSocket sslSocket = null;
+
+        ServerThreadEnvia(SSLSocket sslSocket) {
+            this.sslSocket = sslSocket;
+        }
+
+        public void run() {
+            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+
+            try {
+                // Start handshake
+                sslSocket.startHandshake();
+
+                // Get session after the connection is established
+                SSLSession sslSession = sslSocket.getSession();
+
+                // Start handling application content
+                InputStream inputStream = sslSocket.getInputStream();
+                OutputStream outputStream = sslSocket.getOutputStream();
+
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+
+                while (true) {
+//exemoplio
+                    /* printWriter.println("ola eu sou o server envia particular");
+                    printWriter.flush();
+                    sleep(60000);*/
+                }
+
+            } catch (Exception ex) {
+                System.out.println("foi neste que rebentou 4");
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    static class ServerThreadEnviaAll implements Runnable {
+
+        public ServerThreadEnviaAll() {
+        }
+
+
+
+        public void run() {
+            while (true) {
+                String k = rand.randomnumber();
+                MessageDigest digest;
+                try {
+                    digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(k.getBytes(StandardCharsets.UTF_8));
+                    String hex = DatatypeConverter.printHexBinary(hash);
+
+                    System.out.println(hex);
+                    desafioslista.add(hex);
+                } catch (NoSuchAlgorithmException ex) {
+                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                int flag=0;
+                for (int i = 0; i < clients.size(); i++) {
+                    clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
+                    try {
+                        // Start handshake
+
+                        clients.get(i).startHandshake();
+                        OutputStream outputStream = clients.get(i).getOutputStream();
+                        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                        // Get session after the connection is established
+                        // SSLSession sslSession = clients.get(i).getSession();
+                        if(estado==true&&!clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu))
+                        {
+                            printWriter.println("desafio/para");
+                            printWriter.flush();
+                            flag=1;
+                            
+                        }
+                        
+
+                        System.out.println(k);
+                       
+                        printWriter.println("desafio/"+k);
+                        printWriter.flush();
+                        
+                        if(flag==1&&clients.size()-1==i){
+                            estado=false;
+                            quemresolveu="";
+                        }
+                        // Write data
+                        // clients.get(i).close();
+                    } catch (Exception ex) {
+                        System.out.println("foi neste que rebentou 66");
+                        ex.printStackTrace();
+                    }
+                }
+                try {
+                    sleep(30000);
+
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            //stop();
+        }
+    }
+
 }
