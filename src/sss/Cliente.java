@@ -124,7 +124,7 @@ public class Cliente {
         private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
-       // private static int bits=15;
+        // private static int bits=15;
 
         ClientThread(SSLSocket sslSocket, BlockingQueue<String> q) {
             this.sslSocket = sslSocket;
@@ -152,9 +152,9 @@ public class Cliente {
                     //  while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
                     String[] server = line.split("/");
-                    
-                    if (server[0].equals("desafio")&&!server[1].equals("para")) {
-                        int bits=Integer.parseInt(server[2]);
+
+                    if (server[0].equals("desafio") && !server[1].equals("para")) {
+                        int bits = Integer.parseInt(server[2]);
                         System.out.println("Novo desafio: " + line);
                         SecureRandom random = new SecureRandom();
                         String k = new BigInteger(400, random).toString(32);
@@ -174,15 +174,17 @@ public class Cliente {
                             int flag = 0;
                             int count = 0;
 
-                           
-                            if(bufferedReader.equals("")){
-                                System.out.println("ola");
+                            if (bufferedReader.equals("")) {
+                                System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                 line = bufferedReader.readLine();
                             }
-                                
-                            String[] para=line.split("/");
-                            if(para[0].equals("desafio")&&para[1].equals("para"))
+
+                            String[] para = line.split("/");
+                            if (para[0].equals("desafio") && para[1].equals("para")) {
+                                printWriter.println("desafio/para");
+                                printWriter.flush();
                                 break;
+                            }
                             // System.out.println("tentando");
                             for (int i = 0; i <= bits; i++) {
                                 byte b1 = hash[i];

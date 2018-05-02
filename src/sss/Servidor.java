@@ -40,14 +40,14 @@ public class Servidor implements Runnable {
     private int port = 9999;
     private boolean isServerDone = false;
     public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
-
+    public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = "";
-    public static int bits = 16;
+    public static int bits = 18;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
-    static int flag2=0;
+    static int flag2 = 0;
 
     public static void main(String[] args) {
 
@@ -183,12 +183,13 @@ public class Servidor implements Runnable {
 
                             boolean res = verify(desafioSolved, desafio, 10);
                             System.out.println(res);
-                            if (res == true) {
+                            if (res == true && desafioslista.contains(desafio)) {
                                 estado = true;
                                 quemresolveu = sslSocket.getInetAddress().getHostAddress();
 
+                                desafioslista.remove(desafio);
                                 System.out.println("Parabens ganhas-te 1 freecoin bitch");
-                                flag2=0;
+                                flag2 = 0;
                                 //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
                             }
                         } catch (NoSuchAlgorithmException ex) {
@@ -257,7 +258,7 @@ public class Servidor implements Runnable {
         }
 
         public void run() {
-            
+
             while (true) {
                 String k = rand.randomnumber();
                 MessageDigest digest;
@@ -267,12 +268,12 @@ public class Servidor implements Runnable {
                     String hex = DatatypeConverter.printHexBinary(hash);
 
                     System.out.println(hex);
-
+                    desafioslista.add(hex);
                 } catch (NoSuchAlgorithmException ex) {
                     Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 int flag = 0;
-                
+
                 if (time > 40000) {
                     bits--;
                 }
@@ -288,14 +289,19 @@ public class Servidor implements Runnable {
                         clients.get(i).startHandshake();
                         OutputStream outputStream = clients.get(i).getOutputStream();
                         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                        InputStream inputStream = clients.get(i).getInputStream();
+          
+
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                         // Get session after the connection is established
                         // SSLSession sslSession = clients.get(i).getSession();
                         if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
                             endTime = System.currentTimeMillis();
                             printWriter.println("desafio/para");
                             printWriter.flush();
+                            String l = bufferedReader.readLine();
                             flag = 1;
-                            
+
                         }
 
                         if (flag2 == 0) {
@@ -304,7 +310,9 @@ public class Servidor implements Runnable {
                             System.out.println("os meus bits estao em : " + bits);
                             printWriter.println("desafio/" + k + "/" + bits);
                             printWriter.flush();
-                            flag2=1;
+                            if (clients.size() - 1 == i) {
+                                flag2 = 1;
+                            }
                         }
                         if (flag == 1 && clients.size() - 1 == i) {
                             System.out.println("aqui");
@@ -314,7 +322,7 @@ public class Servidor implements Runnable {
                             estado = false;
                             quemresolveu = "";
                             flag = 0;
-                           
+
                         }
 
                         // Write data
