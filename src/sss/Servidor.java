@@ -243,8 +243,10 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
-                    printWriter.println("./.");
-                    printWriter.flush();
+                    if (estado == false) {
+                        printWriter.println("./.");
+                        printWriter.flush();
+                    }
                     /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
                     sleep(60000);*/
@@ -263,19 +265,22 @@ public class Servidor implements Runnable {
         }
 
         public void run() {
-
+            String k ="";
             while (true) {
-                String k = rand.randomnumber();
-                MessageDigest digest;
-                try {
-                    digest = MessageDigest.getInstance("SHA-256");
-                    byte[] hash = digest.digest(k.getBytes(StandardCharsets.UTF_8));
-                    String hex = DatatypeConverter.printHexBinary(hash);
+                if (estado == false) {
+                    k = rand.randomnumber();
 
-                    System.out.println(hex);
-                    desafioslista.add(hex);
-                } catch (NoSuchAlgorithmException ex) {
-                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                    MessageDigest digest;
+                    try {
+                        digest = MessageDigest.getInstance("SHA-256");
+                        byte[] hash = digest.digest(k.getBytes(StandardCharsets.UTF_8));
+                        String hex = DatatypeConverter.printHexBinary(hash);
+
+                        System.out.println(hex);
+                        desafioslista.add(hex);
+                    } catch (NoSuchAlgorithmException ex) {
+                        Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 int flag = 0;
 
@@ -306,7 +311,7 @@ public class Servidor implements Runnable {
                             printWriter.println("desafio/para");
                             printWriter.flush();
                             // String l = bufferedReader.readLine();
-                            estado = false;
+                            //estado = false;
                             flag = 1;
 
                         }
@@ -320,13 +325,14 @@ public class Servidor implements Runnable {
                             if (clients.size() - 1 == i) {
                                 flag2 = 1;
                             }
+                            
                         }
                         if (flag == 1 && clients.size() - 1 == i) {
                             System.out.println("aqui");
                             time = endTime - startTime;
                             endTime = 0;
                             startTime = 0;
-
+                            estado=false;
                             quemresolveu = null;
                             flag = 0;
 

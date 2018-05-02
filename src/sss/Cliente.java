@@ -174,18 +174,17 @@ public class Cliente {
                             int flag = 0;
                             int count = 0;
 
-                          //  if (bufferedReader.ready()) {
-                                
-                                line = bufferedReader.readLine();
+                            //  if (bufferedReader.ready()) {
+                            line = bufferedReader.readLine();
 
-                                String[] para = line.split("/");
-                                if (para[0].equals("desafio") && para[1].equals("para")) {
-                                    System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                                    /* printWriter.println("desafio/para");
+                            String[] para = line.split("/");
+                            if (para[0].equals("desafio") && para[1].equals("para")) {
+                                System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                                /* printWriter.println("desafio/para");
                                 printWriter.flush();*/
-                                    break;
-                                }
-                          //  }
+                                break;
+                            }
+                            //  }
                             // System.out.println("tentando");
                             for (int i = 0; i <= bits; i++) {
                                 byte b1 = hash[i];
@@ -225,7 +224,7 @@ public class Cliente {
                         }
                         String hashsolved = previousHash;
                         System.out.println(hashsolved);
-                        printWriter.println(server[0]+"/"+server[1]+"/"+server[2] + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
+                        printWriter.println(server[0] + "/" + server[1] + "/" + server[2] + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
                         printWriter.flush();
                         //queue.put(hashsolved);
                     }
