@@ -153,7 +153,7 @@ public class Cliente {
                     line = bufferedReader.readLine();
                     String[] server = line.split("/");
                     
-                    if (server[0].equals("desafio")) {
+                    if (server[0].equals("desafio")&&!server[1].equals("para")) {
                         int bits=Integer.parseInt(server[2]);
                         System.out.println("Novo desafio: " + line);
                         SecureRandom random = new SecureRandom();

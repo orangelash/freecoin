@@ -43,7 +43,7 @@ public class Servidor implements Runnable {
 
     public static boolean estado = false;
     public static String quemresolveu = "";
-    public static int bits = 15;
+    public static int bits = 16;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
