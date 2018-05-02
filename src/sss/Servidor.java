@@ -243,6 +243,8 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
+                    printWriter.println("./.");
+                    printWriter.flush();
                     /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
                     sleep(60000);*/
@@ -293,8 +295,6 @@ public class Servidor implements Runnable {
                         OutputStream outputStream = clients.get(i).getOutputStream();
                         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                         InputStream inputStream = clients.get(i).getInputStream();
-                        printWriter.println("./.");
-                        printWriter.flush();
 
                         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                         // Get session after the connection is established

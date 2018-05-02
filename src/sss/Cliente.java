@@ -175,11 +175,12 @@ public class Cliente {
                             int count = 0;
 
                           //  if (bufferedReader.ready()) {
-                                System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                                
                                 line = bufferedReader.readLine();
 
                                 String[] para = line.split("/");
                                 if (para[0].equals("desafio") && para[1].equals("para")) {
+                                    System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                     /* printWriter.println("desafio/para");
                                 printWriter.flush();*/
                                     break;
@@ -224,7 +225,7 @@ public class Cliente {
                         }
                         String hashsolved = previousHash;
                         System.out.println(hashsolved);
-                        printWriter.println(line + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
+                        printWriter.println(server[0]+"/"+server[1]+"/"+server[2] + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
                         printWriter.flush();
                         //queue.put(hashsolved);
                     }
