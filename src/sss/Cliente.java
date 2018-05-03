@@ -175,7 +175,7 @@ public class Cliente {
                             int count = 0;
 
                             //  if (bufferedReader.ready()) {
-                            line = bufferedReader.readLine();
+                           // line = bufferedReader.readLine();
 
                             String[] para = line.split("/");
                             if (para[0].equals("desafio") && para[1].equals("para")) {

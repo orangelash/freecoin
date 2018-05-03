@@ -243,9 +243,9 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
-                   // if (estado == false) {
-                        printWriter.println("./.");
-                        printWriter.flush();
+                   //z if (estado == false) {
+                      //  printWriter.println("./.");
+                       // printWriter.flush();
                    // }
                     /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
