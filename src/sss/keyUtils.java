@@ -17,16 +17,21 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import javax.crypto.KeyAgreement;
 
 /**
  *
  * @author Vasco Lopes
  */
 public class keyUtils {
+    final protected static char[] hexArray = "0123456789abcdef".toCharArray();
 
     public static KeyPair generateKeyPairPrime192() {
         try {
@@ -45,6 +50,7 @@ public class keyUtils {
     }
 
     public static void SaveKeyPair(String path, KeyPair keyPair) throws IOException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
@@ -66,6 +72,7 @@ public class keyUtils {
     public static KeyPair LoadKeyPair(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         // Read Public Key.
         File filePublicKey = new File(path + "/public.key");
         FileInputStream fis = new FileInputStream(path + "/public.key");
@@ -92,6 +99,36 @@ public class keyUtils {
 
         return new KeyPair(publicKey, privateKey);
     }
+    
+    public static KeyPair LoadKeyPairServer(String path, String algorithm)
+            throws IOException, NoSuchAlgorithmException,
+            InvalidKeySpecException {
+        // Read Public Key.
+        File filePublicKey = new File(path + "/public_server.key");
+        FileInputStream fis = new FileInputStream(path + "/public_server.key");
+        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
+        fis.read(encodedPublicKey);
+        fis.close();
+
+        // Read Private Key.
+        File filePrivateKey = new File(path + "/private_server.key");
+        fis = new FileInputStream(path + "/private_server.key");
+        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+        fis.read(encodedPrivateKey);
+        fis.close();
+
+        // Generate KeyPair.
+        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
+                encodedPublicKey);
+        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+                encodedPrivateKey);
+        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+
+        return new KeyPair(publicKey, privateKey);
+    }
 
     public static void dumpKeyPair(KeyPair keyPair) {
         PublicKey pub = keyPair.getPublic();
@@ -99,5 +136,24 @@ public class keyUtils {
 
         PrivateKey priv = keyPair.getPrivate();
         System.out.println("Private Key: " + StringUtil.getHexString(priv.getEncoded()));
+    }
+
+    
+    public static void doECDH(String name, PrivateKey server, PublicKey alice) throws Exception {
+        KeyAgreement ka = KeyAgreement.getInstance("ECDH", "BC");
+        ka.init(server);
+        ka.doPhase(alice, true);
+        byte[] secret = ka.generateSecret();
+        System.out.println(name + bytesToHex(secret));
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 }
