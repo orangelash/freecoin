@@ -43,7 +43,7 @@ import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
  */
 public class CertificateOps {    
     
-   public void generateCertificate(KeyPair kp){  
+   public void generateCertificateSelfSigned(KeyPair kp){  
        //cria um certificado server-server
        try {
            Security.addProvider(new BouncyCastleProvider());
@@ -191,7 +191,7 @@ public class CertificateOps {
     }
     
     
-    private void VerifyPresentCertificate(PublicKey clientKeys) throws FileNotFoundException, IOException, CertificateException, ClassNotFoundException{
+    private void verifyPresentCertificate(PublicKey clientKeys) throws FileNotFoundException, IOException, CertificateException, ClassNotFoundException{
                    String path = Paths.get("").toAbsolutePath().toString();
  FileInputStream fis = null;
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
