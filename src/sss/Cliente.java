@@ -151,81 +151,80 @@ public class Cliente {
                     String line = null;
                     //  while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
-                    String[] server = line.split("/");
+                    String[] server = line.split("//");
 
-                    if (server[0].equals("desafio") && !server[1].equals("para")) {
-                        int bits = Integer.parseInt(server[2]);
-                        System.out.println("Novo desafio: " + line);
-                        SecureRandom random = new SecureRandom();
-                        String k = new BigInteger(400, random).toString(32);
-                        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                        byte[] hash = digest.digest(server[1].getBytes(StandardCharsets.UTF_8));
-                        String hex = DatatypeConverter.printHexBinary(hash);
-                        System.out.println("O hash do desafio: " + hex);
-                        int foudIt = 0;
+                    int bits = Integer.parseInt(server[2]);
+                    System.out.println("Novo desafio: " + line);
+                    SecureRandom random = new SecureRandom();
+                    String k = new BigInteger(400, random).toString(32);
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(server[1].getBytes(StandardCharsets.UTF_8));
+                    String hex = DatatypeConverter.printHexBinary(hash);
+                    System.out.println("O hash do desafio: " + hex);
+                    int foudIt = 0;
 
-                        while (foudIt == 0) {
-                            nonce++;
-                            String calculatehash = previousHash + Long.toString(timeStamp) + Integer.toString(nonce) + data;
-                            byte[] hashdes = digest.digest(calculatehash.getBytes(StandardCharsets.UTF_8));
-                            previousHash = DatatypeConverter.printHexBinary(hashdes);
-                            String s1 = "";
-                            String s2 = "";
-                            int flag = 0;
-                            int count = 0;
+                    while (foudIt == 0) {
+                        nonce++;
+                        String calculatehash = previousHash + Long.toString(timeStamp) + Integer.toString(nonce) + data;
+                        byte[] hashdes = digest.digest(calculatehash.getBytes(StandardCharsets.UTF_8));
+                        previousHash = DatatypeConverter.printHexBinary(hashdes);
+                        String s1 = "";
+                        String s2 = "";
+                        int flag = 0;
+                        int count = 0;
 
-                            //  if (bufferedReader.ready()) {
-                           // line = bufferedReader.readLine();
+                        //  if (bufferedReader.ready()) {
+                        // line = bufferedReader.readLine();
 
-                            String[] para = line.split("/");
+                        /* String[] para = line.split("//");
                             if (para[0].equals("desafio") && para[1].equals("para")) {
                                 System.out.println("ola!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                                 /* printWriter.println("desafio/para");
                                 printWriter.flush();*/
+ /*break;
+                            }*/
+                        //  }
+                        // System.out.println("tentando");
+                        for (int i = 0; i <= bits; i++) {
+                            byte b1 = hash[i];
+                            byte b2 = hashdes[i];
+                            s1 = String.format("%8s", Integer.toBinaryString(b2 & 0xFF)).replace(' ', '0');
+                            s2 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
+                            String[] arys1 = s1.split("");
+                            String[] arys2 = s2.split("");
+                            System.out.println(s1);
+                            System.out.println(s2);
+                            for (int j = 0; j < arys1.length; j++) {
+                                if (!arys1[j].equals(arys2[j])) {
+                                    System.out.println("nobrak");
+                                    if (count >= bits) {
+                                        break;
+                                    } else {
+                                        flag = 1;
+                                        break;
+                                    }
+
+                                }
+                                count++;
+
+                            }
+
+                            if (count >= bits && flag == 0) {
+                                System.out.println("encontrei");
+                                foudIt = 1;
                                 break;
                             }
-                            //  }
-                            // System.out.println("tentando");
-                            for (int i = 0; i <= bits; i++) {
-                                byte b1 = hash[i];
-                                byte b2 = hashdes[i];
-                                s1 = String.format("%8s", Integer.toBinaryString(b2 & 0xFF)).replace(' ', '0');
-                                s2 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
-                                String[] arys1 = s1.split("");
-                                String[] arys2 = s2.split("");
-                                System.out.println(s1);
-                                System.out.println(s2);
-                                for (int j = 0; j < arys1.length; j++) {
-                                    if (!arys1[j].equals(arys2[j])) {
-                                        System.out.println("nobrak");
-                                        if (count >= bits) {
-                                            break;
-                                        } else {
-                                            flag = 1;
-                                            break;
-                                        }
-
-                                    }
-                                    count++;
-
-                                }
-
-                                if (count >= bits && flag == 0) {
-                                    System.out.println("encontrei");
-                                    foudIt = 1;
-                                    break;
-                                }
-                                if (flag == 1) {
-                                    break;
-                                }
-
+                            if (flag == 1) {
+                                break;
                             }
 
                         }
-                        String hashsolved = previousHash;
-                        System.out.println(hashsolved);
-                        printWriter.println(server[0] + "/" + server[1] + "/" + server[2] + "/resolvido/" + hashsolved + sslSocket.getLocalAddress());
-                        printWriter.flush();
+                        if (count >= bits && flag == 0) {
+                            String hashsolved = previousHash;
+                            System.out.println(hashsolved);
+                            printWriter.println(server[0] + "//" + server[1] + "//" + server[2] + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
+                            printWriter.flush();
+                        }
                         //queue.put(hashsolved);
                     }
 
@@ -285,7 +284,7 @@ public class Cliente {
                         while (!queue.isEmpty()) {
                             value = queue.take();
                             System.out.println(value);
-                            printWriter.println("desafio/" + value + "/" + sslSocket.getLocalAddress());
+                            printWriter.println("desafio//" + value + "//" + sslSocket.getLocalAddress());
                             printWriter.flush();
                             System.out.println(value);
 

@@ -44,7 +44,7 @@ public class Servidor implements Runnable {
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = null;
-    public static int bits = 19;
+    public static int bits = 18;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
@@ -123,6 +123,9 @@ public class Servidor implements Runnable {
             while (!isServerDone) {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 clients.add(sslSocket);
+                clientsRes.add(sslSocket);
+                 System.out.println("aqui"+clientsRes.size()+" " +clients.size());
+               
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
                 t3.start();
@@ -182,7 +185,7 @@ public class Servidor implements Runnable {
                             String desafio = hex;
                             String desafioSolved = recebido[4];
 
-                            boolean res = verify(desafioSolved, desafio, 10);
+                            boolean res = verify(desafioSolved, desafio, bits);
                             System.out.println(res);
                             if (res == true && desafioslista.contains(desafio)) {
                                 estado = true;
@@ -275,6 +278,7 @@ public class Servidor implements Runnable {
                 clientsRes.set(i, clients.get(i));
             }
             while (true) {
+                System.out.println(clientsRes.size()+" " +clients.size());
                 if (clientsRes.size() == clients.size()) {
 
                     // if (estado == false) {
@@ -354,12 +358,13 @@ public class Servidor implements Runnable {
 
                     startTime = System.currentTimeMillis();
                     try {
+                        clientsRes = new ArrayList<SSLSocket>();
                         sleep(30000);
 
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    clientsRes = new ArrayList<SSLSocket>();
+                    
                 }
             }
             //stop();
