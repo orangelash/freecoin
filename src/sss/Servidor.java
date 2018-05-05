@@ -171,7 +171,7 @@ public class Servidor implements Runnable {
                 while ((line = bufferedReader.readLine()) != null) {
                     String inetAddress = sslSocket.getInetAddress().getHostName();
                     System.out.println(line);
-                    String[] recebido = line.split("/");
+                    String[] recebido = line.split("//");
                     if (recebido[0].equals("desafio")) {
                         MessageDigest digest;
                         try {
@@ -308,7 +308,7 @@ public class Servidor implements Runnable {
                         if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
                             System.out.println("é para parar bro");
                             endTime = System.currentTimeMillis();
-                            printWriter.println("desafio/para");
+                            printWriter.println("desafio//para");
                             printWriter.flush();
                             // String l = bufferedReader.readLine();
                             //estado = false;
@@ -320,7 +320,7 @@ public class Servidor implements Runnable {
 
                             System.out.println(k);
                             System.out.println("os meus bits estao em : " + bits);
-                            printWriter.println("desafio/" + k + "/" + bits);
+                            printWriter.println("desafio//" + k + "//" + bits);
                             printWriter.flush();
                             if (clients.size() - 1 == i) {
                                 flag2 = 1;
