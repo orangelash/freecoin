@@ -40,10 +40,11 @@ public class Servidor implements Runnable {
     private int port = 9999;
     private boolean isServerDone = false;
     public static ArrayList<SSLSocket> clients = new ArrayList<SSLSocket>();
+    public static ArrayList<SSLSocket> clientsRes = new ArrayList<SSLSocket>();
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = null;
-    public static int bits = 10;
+    public static int bits = 19;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
@@ -190,7 +191,10 @@ public class Servidor implements Runnable {
                                 desafioslista.remove(desafio);
                                 System.out.println("Parabens ganhas-te 1 freecoin bitch");
                                 flag2 = 0;
+                                clientsRes.add(sslSocket);
                                 //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
+                            } else if (res == true) {
+                                clientsRes.add(sslSocket);
                             }
                         } catch (NoSuchAlgorithmException ex) {
                             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
@@ -206,6 +210,7 @@ public class Servidor implements Runnable {
                 sslSocket.close();
             } catch (Exception ex) {
                 clients.remove(sslSocket);
+                clientsRes.remove(sslSocket);
                 System.out.println("foi neste que rebentou 3");
                 if (clients.size() == 0) {
                     flag2 = 0;
@@ -243,10 +248,10 @@ public class Servidor implements Runnable {
 
                 while (true) {
 //exemoplio
-                   //z if (estado == false) {
-                      //  printWriter.println("./.");
-                       // printWriter.flush();
-                   // }
+                    //z if (estado == false) {
+                    //  printWriter.println("./.");
+                    // printWriter.flush();
+                    // }
                     /* printWriter.println("ola eu sou o server envia particular");
                     printWriter.flush();
                     sleep(60000);*/
@@ -265,9 +270,14 @@ public class Servidor implements Runnable {
         }
 
         public void run() {
-            String k ="";
+            String k = "";
+            for(int i=0;i<clients.size();i++){
+                clientsRes.set(i, clients.get(i));
+            }
             while (true) {
-                if (estado == false) {
+                if (clientsRes.size() == clients.size()) {
+
+                    // if (estado == false) {
                     k = rand.randomnumber();
 
                     MessageDigest digest;
@@ -281,77 +291,75 @@ public class Servidor implements Runnable {
                     } catch (NoSuchAlgorithmException ex) {
                         Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                }
-                int flag = 0;
+                    // }
+                    int flag = 0;
 
-                if (time > 40000) {
-                    bits--;
-                }
-                if (time < 25000) {
-                    bits++;
-                }
-
-                for (int i = 0; i < clients.size(); i++) {
-                    clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
-                    try {
-                        // Start handshake
-
-                        clients.get(i).startHandshake();
-                        OutputStream outputStream = clients.get(i).getOutputStream();
-                        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-                        InputStream inputStream = clients.get(i).getInputStream();
-
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                        // Get session after the connection is established
-                        // SSLSession sslSession = clients.get(i).getSession();
-                        System.out.println(clients.get(i).getInetAddress().getHostAddress() + ".." + quemresolveu + ".." + estado);
-                        if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
-                            System.out.println("é para parar bro");
-                            endTime = System.currentTimeMillis();
-                            printWriter.println("desafio//para");
-                            printWriter.flush();
-                            // String l = bufferedReader.readLine();
-                            //estado = false;
-                            flag = 1;
-
-                        }
-
-                        if (flag2 == 0) {
-
-                            System.out.println(k);
-                            System.out.println("os meus bits estao em : " + bits);
-                            printWriter.println("desafio//" + k + "//" + bits);
-                            printWriter.flush();
-                            if (clients.size() - 1 == i) {
-                                flag2 = 1;
-                            }
-                            
-                        }
-                        if (flag == 1 && clients.size() - 1 == i) {
-                            System.out.println("aqui");
-                            time = endTime - startTime;
-                            endTime = 0;
-                            startTime = 0;
-                            estado=false;
-                            quemresolveu = null;
-                            flag = 0;
-
-                        }
-
-                        // Write data
-                        // clients.get(i).close();
-                    } catch (Exception ex) {
-                        System.out.println("foi neste que rebentou 66");
-                        ex.printStackTrace();
+                    if (time > 40000) {
+                        bits--;
                     }
-                }
+                    if (time < 25000) {
+                        bits++;
+                    }
 
-                startTime = System.currentTimeMillis();
-                try {
-                    sleep(30000);
+                    for (int i = 0; i < clients.size(); i++) {
+                        clients.get(i).setEnabledCipherSuites(clients.get(i).getSupportedCipherSuites());
+                        try {
+                            // Start handshake
 
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                            clients.get(i).startHandshake();
+                            OutputStream outputStream = clients.get(i).getOutputStream();
+                            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+                            InputStream inputStream = clients.get(i).getInputStream();
+
+                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                            // Get session after the connection is established
+                            // SSLSession sslSession = clients.get(i).getSession();
+                            System.out.println(clients.get(i).getInetAddress().getHostAddress() + ".." + quemresolveu + ".." + estado);
+                            if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
+
+                                endTime = System.currentTimeMillis();
+                                flag = 1;
+
+                            }
+
+                            if (flag2 == 0) {
+
+                                System.out.println(k);
+                                System.out.println("os meus bits estao em : " + bits);
+                                printWriter.println("desafio//" + k + "//" + bits);
+                                printWriter.flush();
+                                if (clients.size() - 1 == i) {
+                                    flag2 = 1;
+                                }
+
+                            }
+                            if (flag == 1 && clients.size() - 1 == i) {
+                                System.out.println("aqui");
+                                time = endTime - startTime;
+                                endTime = 0;
+                                startTime = 0;
+                                estado = false;
+                                quemresolveu = null;
+                                flag = 0;
+
+                            }
+
+                            // Write data
+                            // clients.get(i).close();
+                        } catch (Exception ex) {
+                            System.out.println("foi neste que rebentou 66");
+                            ex.printStackTrace();
+                        }
+                    }
+
+                    startTime = System.currentTimeMillis();
+                    try {
+                        sleep(30000);
+
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    clientsRes = new ArrayList<SSLSocket>();
                 }
             }
             //stop();
