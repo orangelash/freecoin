@@ -124,8 +124,8 @@ public class Servidor implements Runnable {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 clients.add(sslSocket);
                 clientsRes.add(sslSocket);
-                 System.out.println("aqui"+clientsRes.size()+" " +clients.size());
-               
+             
+
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
                 t3.start();
@@ -186,7 +186,6 @@ public class Servidor implements Runnable {
                             String desafioSolved = recebido[4];
 
                             boolean res = verify(desafioSolved, desafio, bits);
-                            System.out.println(res);
                             if (res == true && desafioslista.contains(desafio)) {
                                 estado = true;
                                 quemresolveu = sslSocket.getInetAddress().getHostAddress();
@@ -199,11 +198,19 @@ public class Servidor implements Runnable {
                             } else if (res == true) {
                                 clientsRes.add(sslSocket);
                             }
+
+                            if (clientsRes.size()==clients.size()) {
+                                endTime = System.currentTimeMillis();
+                                time = endTime - startTime;
+                                endTime = 0;
+                                startTime = 0;
+                                System.out.println("o tempo foi de: "+time);
+                            }
                         } catch (NoSuchAlgorithmException ex) {
                             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    System.out.println("Inut : " + line + " ," + inetAddress);
+                    
 
                     if (line.trim().equals("007")) {
                         break;
@@ -274,11 +281,11 @@ public class Servidor implements Runnable {
 
         public void run() {
             String k = "";
-            for(int i=0;i<clients.size();i++){
+            for (int i = 0; i < clients.size(); i++) {
                 clientsRes.set(i, clients.get(i));
             }
             while (true) {
-                System.out.println(clientsRes.size()+" " +clients.size());
+                
                 if (clientsRes.size() == clients.size()) {
 
                     // if (estado == false) {
@@ -289,8 +296,6 @@ public class Servidor implements Runnable {
                         digest = MessageDigest.getInstance("SHA-256");
                         byte[] hash = digest.digest(k.getBytes(StandardCharsets.UTF_8));
                         String hex = DatatypeConverter.printHexBinary(hash);
-
-                        System.out.println(hex);
                         desafioslista.add(hex);
                     } catch (NoSuchAlgorithmException ex) {
                         Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
@@ -318,30 +323,26 @@ public class Servidor implements Runnable {
                             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                             // Get session after the connection is established
                             // SSLSession sslSession = clients.get(i).getSession();
-                            System.out.println(clients.get(i).getInetAddress().getHostAddress() + ".." + quemresolveu + ".." + estado);
+                           
                             if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
 
-                                endTime = System.currentTimeMillis();
                                 flag = 1;
 
                             }
 
                             if (flag2 == 0) {
 
-                                System.out.println(k);
+                          
                                 System.out.println("os meus bits estao em : " + bits);
                                 printWriter.println("desafio//" + k + "//" + bits);
                                 printWriter.flush();
+                                startTime = System.currentTimeMillis();
                                 if (clients.size() - 1 == i) {
                                     flag2 = 1;
                                 }
 
                             }
                             if (flag == 1 && clients.size() - 1 == i) {
-                                System.out.println("aqui");
-                                time = endTime - startTime;
-                                endTime = 0;
-                                startTime = 0;
                                 estado = false;
                                 quemresolveu = null;
                                 flag = 0;
@@ -356,7 +357,6 @@ public class Servidor implements Runnable {
                         }
                     }
 
-                    startTime = System.currentTimeMillis();
                     try {
                         clientsRes = new ArrayList<SSLSocket>();
                         sleep(30000);
@@ -364,7 +364,7 @@ public class Servidor implements Runnable {
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
+
                 }
             }
             //stop();

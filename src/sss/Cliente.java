@@ -160,7 +160,7 @@ public class Cliente {
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
                     byte[] hash = digest.digest(server[1].getBytes(StandardCharsets.UTF_8));
                     String hex = DatatypeConverter.printHexBinary(hash);
-                    System.out.println("O hash do desafio: " + hex);
+                   
                     int foudIt = 0;
 
                     while (foudIt == 0) {
@@ -192,11 +192,8 @@ public class Cliente {
                             s2 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
                             String[] arys1 = s1.split("");
                             String[] arys2 = s2.split("");
-                            System.out.println(s1);
-                            System.out.println(s2);
                             for (int j = 0; j < arys1.length; j++) {
                                 if (!arys1[j].equals(arys2[j])) {
-                                    System.out.println("nobrak");
                                     if (count >= bits) {
                                         break;
                                     } else {
@@ -283,10 +280,8 @@ public class Cliente {
                     if (!queue.isEmpty()) {
                         while (!queue.isEmpty()) {
                             value = queue.take();
-                            System.out.println(value);
                             printWriter.println("desafio//" + value + "//" + sslSocket.getLocalAddress());
                             printWriter.flush();
-                            System.out.println(value);
 
                         }
                     }
