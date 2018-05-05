@@ -43,7 +43,7 @@ public class Servidor implements Runnable {
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = null;
-    public static int bits = 19;
+    public static int bits = 10;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;

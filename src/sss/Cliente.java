@@ -26,7 +26,6 @@ import java.security.SecureRandom;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -40,7 +39,7 @@ import sun.misc.Lock;
 
 public class Cliente {
 
-    public static Lock l =new Lock();
+    public static Lock l = new Lock();
     private final BlockingQueue<String> queue;
     public static boolean para = false;
     public static boolean resolve = false;
@@ -50,7 +49,7 @@ public class Cliente {
     private int port = 9999;
 
     public static void main(String[] args) {
-        
+
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
         Cliente clientRecebe = new Cliente(q);
         clientRecebe.run();
@@ -195,9 +194,13 @@ public class Cliente {
                             }*/
                             //  }
                             // System.out.println("tentando");
+                            sleep(10);
+                            System.out.println(para);
                             if (para == true) {
+                                para = false;
                                 break;
                             }
+                            //sleep(30);
                             for (int i = 0; i <= bits; i++) {
                                 byte b1 = hash[i];
                                 byte b2 = hashdes[i];
@@ -234,15 +237,14 @@ public class Cliente {
                             }
 
                         }
-                        String hashsolved = previousHash;
-                        System.out.println(hashsolved);
-                        printWriter.println("desafio//" + desafio + "//" + dificuldade + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
-                        printWriter.flush();
-                        l.lock();
-                        try {
+                        if (foudIt == 1) {
+
+                            String hashsolved = previousHash;
+                            System.out.println(hashsolved);
+                            printWriter.println("desafio//" + desafio + "//" + dificuldade + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
+                            printWriter.flush();
+
                             resolve = false;
-                        } finally {
-                            l.unlock();
                         }
                         //queue.put(hashsolved);
 
@@ -309,22 +311,16 @@ public class Cliente {
 
                     if (server[0].equals("desafio") && server[1].equals("para")) {
                         para = true;
-                        l.lock();
-                        try {
-                            resolve = false;
-                        } finally {
-                            l.unlock();
-                        }
+                        resolve = false;
+
                     } else if (server[0].equals("desafio") && !server[1].equals("para")) {
                         desafio = server[1];
                         dificuldade = server[2];
-                        try {
-                            l.lock();
-                            resolve = true;
-                        } finally {
-                            l.unlock();
-                        }
+                        resolve = true;
+                        
+
                     }
+                    
 
                 }
                 // sslSocket.close();
@@ -371,7 +367,7 @@ public class Cliente {
                             printWriter.println("desafio//" + value + "//" + sslSocket.getLocalAddress());
                             printWriter.flush();
                             System.out.println(value);
-                            para = false;
+                            
 
                         }
                     }
