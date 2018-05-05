@@ -187,6 +187,8 @@ public class Servidor implements Runnable {
 
                             boolean res = verify(desafioSolved, desafio, bits);
                             if (res == true && desafioslista.contains(desafio)) {
+                                printWriter.println("desafiowin//Desafio resolvido, ganhou uma freecoin");
+                                printWriter.flush();
                                 estado = true;
                                 quemresolveu = sslSocket.getInetAddress().getHostAddress();
 
