@@ -285,8 +285,8 @@ public class Servidor implements Runnable {
                         ObjectOutputStream toServer;
                         toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                         //byte[] frame = certClient.getEncoded();
-                        toServer.writeObject(certClient);
-                        toServer.close();
+                        toServer.writeObject(certClient.toString());
+                        
                        System.out.println(certClient);
                         /* System.out.println(cadeia);*/
                         System.out.println("TUDO OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");

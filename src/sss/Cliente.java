@@ -57,6 +57,7 @@ public class Cliente {
     private static int leu = 0;
     private String host = "192.168.137.1";
     private int port = 9999;
+    private static String certi = "";
 
     public static void main(String[] args) {
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
@@ -186,9 +187,10 @@ public class Cliente {
                         System.out.println("aqui: " + server[1].getBytes(StandardCharsets.UTF_8));*/
                         ObjectInputStream fromClient;
                         fromClient =new ObjectInputStream(sslSocket.getInputStream());
-                        X509Certificate cert = (X509Certificate) fromClient.readObject();
+                        String cert =  (String) fromClient.readObject();
                         System.out.println(cert);
-                        fromClient.close();
+                        certi=cert;
+                        
                         //keyUtils.bytesToHex(server[1]);
                     }
                 }
@@ -413,9 +415,11 @@ public class Cliente {
 //                                String cert = bufferedReader.readLine();
 //                                System.out.println(""+cert);
                                 // 4 - ESCREVER CERTIFICADO 
-                                //CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                                // X509Certificate certificate = CertOps.convertToX509Cert(cert);
-                                //             System.out.println(""+certificate);
+                               
+                                sleep(2000);
+                                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                                X509Certificate certificate = CertOps.convertToX509Cert(certi);
+                                System.out.println("ei jude"+certificate);
                             }
 
                             break;
