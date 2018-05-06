@@ -44,6 +44,7 @@ public class Cliente {
     private final BlockingQueue<String> queue;
     private static String desafio = "";
     private static String bitss = "";
+    private static int leu=0;
     private String host = "192.168.137.1";
     private int port = 9999;
 
@@ -129,6 +130,7 @@ public class Cliente {
         private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
+        
         // private static int bits=15;
 
         ClientThreadEscuta(SSLSocket sslSocket, BlockingQueue<String> q) {
@@ -154,15 +156,16 @@ public class Cliente {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
                     String line = null;
-                    System.out.println("1");
+                    //System.out.println("1");
                     //  while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
-                    System.out.println("2");
+                    //System.out.println("2");
                     String[] server = line.split("//");
-                    System.out.println("3");
+                    //System.out.println("3");
                     if (server[0].equals("desafio")) {
                         desafio = server[1];
                         bitss = server[2];
+                        leu=1;
 
                     } else if (server[0].equals("desafiowin")) {
                         System.out.println(server[1]);
@@ -212,7 +215,8 @@ public class Cliente {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
                     sleep(10);
-                    if (!desafio.equals("")) {
+                    if (!desafio.equals("")&&leu==1) {
+                        leu=0;
                         int bits = Integer.parseInt(bitss);
                         System.out.println("Novo desafio: " + desafio);
                         SecureRandom random = new SecureRandom();
@@ -269,6 +273,7 @@ public class Cliente {
                                 if (count >= bits && flag == 0) {
                                     System.out.println("encontrei");
                                     foudIt = 1;
+                                    //leu=0;
                                     break;
                                 }
                                 if (flag == 1) {
