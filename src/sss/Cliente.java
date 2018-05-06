@@ -15,15 +15,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -44,7 +54,7 @@ public class Cliente {
     private final BlockingQueue<String> queue;
     private static String desafio = "";
     private static String bitss = "";
-    private static int leu=0;
+    private static int leu = 0;
     private String host = "192.168.137.1";
     private int port = 9999;
 
@@ -130,9 +140,8 @@ public class Cliente {
         private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
-        
-        // private static int bits=15;
 
+        // private static int bits=15;
         ClientThreadEscuta(SSLSocket sslSocket, BlockingQueue<String> q) {
             this.sslSocket = sslSocket;
             queue = q;
@@ -165,10 +174,22 @@ public class Cliente {
                     if (server[0].equals("desafio")) {
                         desafio = server[1];
                         bitss = server[2];
-                        leu=1;
+                        leu = 1;
 
                     } else if (server[0].equals("desafiowin")) {
                         System.out.println(server[1]);
+                    } else if (server[0].equals("cadeia")) {
+                        System.out.println("cadeia= " + server[1]);
+                        /*byte[] byteArr = server[1].getBytes();
+                        byte[] cadeia = Base64.getDecoder().decode(server[1]);
+                        System.out.println(byteArr);
+                        System.out.println("aqui: " + server[1].getBytes(StandardCharsets.UTF_8));*/
+                        ObjectInputStream fromClient;
+                        fromClient =new ObjectInputStream(sslSocket.getInputStream());
+                        X509Certificate cert = (X509Certificate) fromClient.readObject();
+                        System.out.println(cert);
+                        fromClient.close();
+                        //keyUtils.bytesToHex(server[1]);
                     }
                 }
 
@@ -215,8 +236,8 @@ public class Cliente {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
                     sleep(10);
-                    if (!desafio.equals("")&&leu==1) {
-                        leu=0;
+                    if (!desafio.equals("") && leu == 1) {
+                        leu = 0;
                         int bits = Integer.parseInt(bitss);
                         System.out.println("Novo desafio: " + desafio);
                         SecureRandom random = new SecureRandom();
@@ -356,14 +377,96 @@ public class Cliente {
                     opc = Ler.umInt();
                     switch (opc) {
                         case 1: {
-                            System.out.println("registo");
-                            String aux = Ler.umaString();
-                            printWriter.println(aux);
-                            printWriter.flush();
+                            System.out.println("---- Registo ----");
+                            int registoNovo = 1;
+                            String path = Paths.get("").toAbsolutePath().toString();
+                            //verificar se já tem chaves criadas
+                            try {
+                                //caso já tenha  perguntar se quer realmente registar-se outra vez
+                                if (Files.exists(Paths.get(path + "/public.key"))) {
+                                    System.out.println("Já tem um registo efetuado, deseja realmente efetuar um novo?\n1-Sim\n0-Não");
+                                    registoNovo = Ler.umInt();
+                                }
+
+                            } catch (Exception e) {
+                                //NÃO HÁ CHAVES
+                            }
+
+                            // caso não tenha chaves, registar-se
+                            if (registoNovo == 1) {
+                                System.out.println("----- Gerando chaves -----");
+                                KeyPair novasChaves = keyUtils.generateKeyPairPrime192();
+                                keyUtils.SaveKeyPair(path, novasChaves);
+                                System.out.println("----- CHAVES -----");
+                                keyUtils.dumpKeyPair(novasChaves);
+
+                                //FAZER LIGAÇÃO COM O SERVIDOR, ENVIAR A PUBLIC KEY CIFRADA COM PUBLIC KEY DO SERVER
+                                // 1 - LER CERTIFICADO OU PUBLIC KEY DO SERVIDOR
+                                PublicKey server = keyUtils.LoadServerPublicKey(path, "ECDSA");
+
+                                byte[] publicKeyX = novasChaves.getPublic().getEncoded();
+                                String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
+                                printWriter.println("registar//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
+                                printWriter.flush();
+
+                                // 3 - RECEBER CADEIA DE CERTIFICAÇÃO!
+//                                String cert = bufferedReader.readLine();
+//                                System.out.println(""+cert);
+                                // 4 - ESCREVER CERTIFICADO 
+                                //CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                                // X509Certificate certificate = CertOps.convertToX509Cert(cert);
+                                //             System.out.println(""+certificate);
+                            }
+
                             break;
                         }
                         case 2: {
                             System.out.println("entrar");
+                            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+                            String path = Paths.get("").toAbsolutePath().toString();
+
+                            KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
+                            PublicKey server = keyUtils.LoadServerPublicKey(path, "ECDSA");
+
+                            // 1 - Enviar public key ao servidor, ele verifica se está registado
+                            byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
+                            String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
+                            printWriter.println("login//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
+                            printWriter.flush();
+
+                            // 2 - Fazer autenticação mutua (AMBOS TÊM CERTIFICADOS UM DO OUTRO)
+                            //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
+                            //  2.2) ver se o desafio que o servidor assinou está correto com o certificado dele, se sim, continuar, caso contrário aborta
+                            // 3 - Gerar chaves de sessão
+                            byte[] sessionKey = keyUtils.doECDH(clienteKeys.getPrivate(), server);
+                            System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+                            byte[] sessionKeyA = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyB = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyC = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyD = new byte[sessionKey.length + 1];
+                            sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyA[sessionKeyA.length - 1] = 65;
+                            sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyB[sessionKeyA.length - 1] = 66;
+                            sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyC[sessionKeyA.length - 1] = 67;
+                            sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyD[sessionKeyA.length - 1] = 68;
+
+                            MessageDigest digest;
+                            digest = MessageDigest.getInstance("SHA-256");
+                            byte[] hash = digest.digest(sessionKeyA);
+                            String chaveA = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyB);
+                            String chaveB = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyC);
+                            String chaveC = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyD);
+                            String chaveD = DatatypeConverter.printHexBinary(hash);
+
                             break;
                         }
 

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -13,11 +14,20 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.X509Certificate;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +54,7 @@ public class Servidor implements Runnable {
     public static ArrayList<String> desafioslista = new ArrayList<String>();
     public static boolean estado = false;
     public static String quemresolveu = null;
-    public static int bits = 18;
+    public static int bits = 22;
     static long startTime = 0;
     static long endTime = 0;
     static long time = 30000;
@@ -124,7 +134,6 @@ public class Servidor implements Runnable {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 clients.add(sslSocket);
                 clientsRes.add(sslSocket);
-             
 
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
@@ -201,18 +210,118 @@ public class Servidor implements Runnable {
                                 clientsRes.add(sslSocket);
                             }
 
-                            if (clientsRes.size()==clients.size()) {
+                            if (clientsRes.size() == clients.size()) {
                                 endTime = System.currentTimeMillis();
                                 time = endTime - startTime;
                                 endTime = 0;
                                 startTime = 0;
-                                System.out.println("o tempo foi de: "+time);
+                                System.out.println("o tempo foi de: " + time);
                             }
                         } catch (NoSuchAlgorithmException ex) {
                             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    
+                    if (line.contains("registar//") == true) {
+                        String path = Paths.get("").toAbsolutePath().toString();
+                        String[] chavePubCliente = line.split("//");
+                        System.out.println("Quero registar!");
+                        //System.out.println("ChavepublicaCliente=> "+chavePubCliente[1]);
+                        //receber chave publica
+
+                        //String chavePublicaCliente=bufferedReader.readLine();
+                        //System.out.println("chave publica cliente"+chavePublicaCliente);
+                        byte[] publicKeyX = Base64.getDecoder().decode(chavePubCliente[1]);
+                        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+                        //criar chave publica atraves dos bytes recebidos (DO CLIENTE)
+                        X509EncodedKeySpec ks = new X509EncodedKeySpec(publicKeyX);
+                        KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
+                        PublicKey a = kf.generatePublic(ks);
+                        //System.out.println("a= "+a);
+
+                        // guardar chave pública na pasta /pks/
+                        keyUtils.SaveAlicePK(path + "/pks/" + StringUtil.getHexString(a.getEncoded()), a);
+
+                        //chamar diffie helman para gerar chaves de sessao
+                        byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), a);
+                        System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+
+                        byte[] sessionKeyA = new byte[sessionKey.length + 1];
+                        byte[] sessionKeyB = new byte[sessionKey.length + 1];
+                        byte[] sessionKeyC = new byte[sessionKey.length + 1];
+                        byte[] sessionKeyD = new byte[sessionKey.length + 1];
+                        sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+                        sessionKeyA[sessionKeyA.length - 1] = 65;
+                        sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+                        sessionKeyB[sessionKeyA.length - 1] = 66;
+                        sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+                        sessionKeyC[sessionKeyA.length - 1] = 67;
+                        sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+                        sessionKeyD[sessionKeyA.length - 1] = 68;
+
+                        MessageDigest digest;
+                        digest = MessageDigest.getInstance("SHA-256");
+                        byte[] hash = digest.digest(sessionKeyA);
+                        String hex = DatatypeConverter.printHexBinary(hash);
+                        System.out.println("" + hex);
+
+                        //gerar certificados e enviar
+                        //gerar certificados e enviar
+                        String pathd = Paths.get("").toAbsolutePath().toString();
+                        CertOps cops = new CertOps();
+                        keyUtils ku = new keyUtils();
+                        StringUtil su = new StringUtil();
+
+                        KeyPair kpServer = ku.LoadKeyPairServer(pathd, "ECDSA");
+                        cops.createCertificate(false, kpServer.getPrivate(), a);
+                        X509Certificate certClient = cops.generateCertificateChain(a);
+                        //certClient.verify(kpServer.getPublic());
+                       /* byte[] cadeia = Base64.getEncoder().encode(certClient.getEncoded());
+                        String str = new String(cadeia);*/
+
+                        //criar chave publica atraves dos bytes recebidos
+                        printWriter.println("cadeia//.");
+                        printWriter.flush();
+                        ObjectOutputStream toServer;
+                        toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+                        //byte[] frame = certClient.getEncoded();
+                        toServer.writeObject(certClient);
+                        toServer.close();
+                       System.out.println(certClient);
+                        /* System.out.println(cadeia);*/
+                        System.out.println("TUDO OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    } else if (line.contains("login//") == true) {
+                        String path = Paths.get("").toAbsolutePath().toString();
+
+                        // 1 - receber chave pública do cliente
+                        String[] chavePubCliente = line.split("//");
+                        System.out.println("Quero entrar!");
+                        System.out.println("ChavepublicaCliente=> " + chavePubCliente[1]);
+                        //receber chave publica
+
+                        byte[] publicKeyX = Base64.getDecoder().decode(chavePubCliente[1]);
+                        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+                        //criar chave publica atraves dos bytes recebidos (DO CLIENTE)
+                        X509EncodedKeySpec ks = new X509EncodedKeySpec(publicKeyX);
+                        KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
+                        PublicKey alice = kf.generatePublic(ks);
+                        System.out.println("a= " + alice);
+
+                        boolean existePK = true;
+                        // 2 - verifica se a chave pública existe, se não existir recusa a ligação
+                        try {
+                            PublicKey aliceExiste = keyUtils.LoadAlicePublicKey(path + "/pks/" + StringUtil.getHexString(alice.getEncoded()), "ECDSA");
+                        } catch (Exception e) {
+                            existePK = false;
+                        }
+
+                        if (existePK) {
+                            // 3 - autenticação mutua
+
+                            // 4 - gera chaves de sessão para o cliente
+                        }
+                    }
 
                     if (line.trim().equals("007")) {
                         break;
@@ -287,7 +396,7 @@ public class Servidor implements Runnable {
                 clientsRes.set(i, clients.get(i));
             }
             while (true) {
-                
+
                 if (clientsRes.size() == clients.size()) {
 
                     // if (estado == false) {
@@ -325,7 +434,7 @@ public class Servidor implements Runnable {
                             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                             // Get session after the connection is established
                             // SSLSession sslSession = clients.get(i).getSession();
-                           
+
                             if (estado == true && !clients.get(i).getInetAddress().getHostAddress().equals(quemresolveu)) {
 
                                 flag = 1;
@@ -334,7 +443,6 @@ public class Servidor implements Runnable {
 
                             if (flag2 == 0) {
 
-                          
                                 System.out.println("os meus bits estao em : " + bits);
                                 printWriter.println("desafio//" + k + "//" + bits);
                                 printWriter.flush();
