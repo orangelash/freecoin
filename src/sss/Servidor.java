@@ -242,29 +242,6 @@ public class Servidor implements Runnable {
                         // guardar chave pública na pasta /pks/
                         keyUtils.SaveAlicePK(path + "/pks/" + StringUtil.getHexString(a.getEncoded()), a);
 
-                        //chamar diffie helman para gerar chaves de sessao
-                        byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), a);
-                        System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
-
-                        byte[] sessionKeyA = new byte[sessionKey.length + 1];
-                        byte[] sessionKeyB = new byte[sessionKey.length + 1];
-                        byte[] sessionKeyC = new byte[sessionKey.length + 1];
-                        byte[] sessionKeyD = new byte[sessionKey.length + 1];
-                        sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
-                        sessionKeyA[sessionKeyA.length - 1] = 65;
-                        sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
-                        sessionKeyB[sessionKeyA.length - 1] = 66;
-                        sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
-                        sessionKeyC[sessionKeyA.length - 1] = 67;
-                        sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
-                        sessionKeyD[sessionKeyA.length - 1] = 68;
-
-                        MessageDigest digest;
-                        digest = MessageDigest.getInstance("SHA-256");
-                        byte[] hash = digest.digest(sessionKeyA);
-                        String hex = DatatypeConverter.printHexBinary(hash);
-                        System.out.println("" + hex);
-
                         //gerar certificados e enviar
                         //gerar certificados e enviar
                         String pathd = Paths.get("").toAbsolutePath().toString();
@@ -276,7 +253,7 @@ public class Servidor implements Runnable {
                         cops.createCertificate(false, kpServer.getPrivate(), a);
                         X509Certificate certClient = cops.generateCertificateChain(a);
                         //certClient.verify(kpServer.getPublic());
-                       /* byte[] cadeia = Base64.getEncoder().encode(certClient.getEncoded());
+                        /* byte[] cadeia = Base64.getEncoder().encode(certClient.getEncoded());
                         String str = new String(cadeia);*/
 
                         //criar chave publica atraves dos bytes recebidos
@@ -285,9 +262,9 @@ public class Servidor implements Runnable {
                         ObjectOutputStream toServer;
                         toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                         //byte[] frame = certClient.getEncoded();
-                        toServer.writeObject(certClient.toString());
-                        
-                       System.out.println(certClient);
+                        toServer.writeObject(certClient);
+
+                        System.out.println(certClient);
                         /* System.out.println(cadeia);*/
                         System.out.println("TUDO OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     } else if (line.contains("login//") == true) {
@@ -320,6 +297,28 @@ public class Servidor implements Runnable {
                             // 3 - autenticação mutua
 
                             // 4 - gera chaves de sessão para o cliente
+                            //chamar diffie helman para gerar chaves de sessao
+                            byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), alice);
+                            System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+
+                            byte[] sessionKeyA = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyB = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyC = new byte[sessionKey.length + 1];
+                            byte[] sessionKeyD = new byte[sessionKey.length + 1];
+                            sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyA[sessionKeyA.length - 1] = 65;
+                            sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyB[sessionKeyA.length - 1] = 66;
+                            sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyC[sessionKeyA.length - 1] = 67;
+                            sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+                            sessionKeyD[sessionKeyA.length - 1] = 68;
+
+                            MessageDigest digest;
+                            digest = MessageDigest.getInstance("SHA-256");
+                            byte[] hash = digest.digest(sessionKeyA);
+                            String hex = DatatypeConverter.printHexBinary(hash);
+                            System.out.println("" + hex);
                         }
                     }
 

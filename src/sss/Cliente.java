@@ -19,7 +19,9 @@ import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -57,7 +59,7 @@ public class Cliente {
     private static int leu = 0;
     private String host = "192.168.137.1";
     private int port = 9999;
-    private static String certi = "";
+    private static X509Certificate certi = null;
 
     public static void main(String[] args) {
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
@@ -186,11 +188,11 @@ public class Cliente {
                         System.out.println(byteArr);
                         System.out.println("aqui: " + server[1].getBytes(StandardCharsets.UTF_8));*/
                         ObjectInputStream fromClient;
-                        fromClient =new ObjectInputStream(sslSocket.getInputStream());
-                        String cert =  (String) fromClient.readObject();
+                        fromClient = new ObjectInputStream(sslSocket.getInputStream());
+                        X509Certificate cert = (X509Certificate) fromClient.readObject();
                         System.out.println(cert);
-                        certi=cert;
-                        
+                        certi = cert;
+
                         //keyUtils.bytesToHex(server[1]);
                     }
                 }
@@ -411,15 +413,22 @@ public class Cliente {
                                 printWriter.println("registar//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
                                 printWriter.flush();
 
-                                // 3 - RECEBER CADEIA DE CERTIFICAÇÃO!
-//                                String cert = bufferedReader.readLine();
-//                                System.out.println(""+cert);
+
                                 // 4 - ESCREVER CERTIFICADO 
-                               
                                 sleep(2000);
                                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                                X509Certificate certificate = CertOps.convertToX509Cert(certi);
-                                System.out.println("ei jude"+certificate);
+                                try {
+                                    certi.verify(novasChaves.getPublic());
+                                    System.out.println("verificado");
+                                    FileOutputStream fout = new FileOutputStream(path + "/meu.cer");
+                                    fout.write(certi.getEncoded());
+                                    fout.close();
+                                } catch (Exception e) {
+                                    //e.printStackTrace();
+                                    System.out.println("nao verificado");
+                                }
+                                //X509Certificate certificate = CertOps.convertToX509Cert(certi);
+                                //System.out.println("ei jude"+certificate);
                             }
 
                             break;
