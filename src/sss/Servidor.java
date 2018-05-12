@@ -482,11 +482,14 @@ public class Servidor implements Runnable {
                         clientsRes.remove(sslSocket);
                     } else if (line.contains("transacao//") == true) {
                         System.out.println("-----Transação-----");
+                        
                         //ObjectInputStream fromClient;
                         System.out.println("1");
-                       // fromClient = new ObjectInputStream(sslSocket.getInputStream());
-                       
-                        Transaction transacao = (Transaction) fromClient.readObject();
+                        //fromClient = new ObjectInputStream(sslSocket.getInputStream());
+
+                        Transaction transacao =  (Transaction) fromClient.readObject();
+                        System.out.println(transacao);
+                        System.out.println("nao esto");
                         PublicKey EfetuaTransacao = transacao.senderPublicKey;
                         System.out.println("2");
                         Float ValorTroca = transacao.getAmount();

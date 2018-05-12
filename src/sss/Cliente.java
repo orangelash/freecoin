@@ -378,8 +378,8 @@ public class Cliente {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-                ObjectOutputStream toServer= new ObjectOutputStream(sslSocket.getOutputStream());
-                ObjectInputStream from = new ObjectInputStream(sslSocket.getInputStream());
+                ObjectOutputStream toServer;
+                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
@@ -560,11 +560,13 @@ public class Cliente {
                                                     System.out.println("deu aqui");
                                                 }
                                             } while (destinatario == null);
+                                            System.out.println("meueuuuu jardimmmmmmmmmmmmmm");
                                             Transaction transacao = new Transaction(pubAlice, destinatario, valorEnviar);
                                             transacao.generateSignature(privateKeyAlice);
                                             System.out.println("Transacao => " + transacao.toString());
-
+                                           
                                             toServer.writeObject(transacao);
+                                            System.out.println("enviei");
                                             break;
                                         }
                                         case 2:
