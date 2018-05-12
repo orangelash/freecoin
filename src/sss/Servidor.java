@@ -63,7 +63,7 @@ public class Servidor implements Runnable {
     static long time = 30000;
     static int flag2 = 0;
     public static ArrayList<Session> sess = new ArrayList<Session>();
-    public static ArrayList<Transaction> transacoes = new ArrayList<>();
+    //public static ArrayList<Transaction> transacoes = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -136,6 +136,14 @@ public class Servidor implements Runnable {
 
             System.out.println("SSL server started");
             while (!isServerDone) {
+//                Transaction transferir = new Transaction(null,null, (float) 0.0);
+//                ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
+//                transacoes.add(transferir);
+//                FileOutputStream fout = new FileOutputStream("transacoes.txt");
+//                ObjectOutputStream oos = new ObjectOutputStream(fout);
+//                oos.writeObject(transacoes);
+//                oos.close();
+//                fout.close();
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
@@ -222,15 +230,22 @@ public class Servidor implements Runnable {
                                 Transaction transferir = new Transaction(servidor.getPublic(), receiver, 1);
                                 PrivateKey servidor2 = servidor.getPrivate();
                                 transferir.generateSignatureServer(servidor2);
-                                synchronized (transacoes) {
-                                    System.out.println("pega lá mano");
-                                    transferir.generateSignatureServer(servidor2);
-                                    transacoes.add(transferir);
-                                    FileOutputStream fout = new FileOutputStream("transacoes.txt");
-                                    ObjectOutputStream oos = new ObjectOutputStream(fout);
-                                    oos.writeObject(transacoes);
-                                    fout.close();
+                                //synchronized (transacoes) {
+                                System.out.println("pega lá mano");
+                                transferir.generateSignatureServer(servidor2);
+                                ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
+                                ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
+                                transacoes = (ArrayList<Transaction>) ob.readObject();
+                                transacoes.add(transferir);
+                                ob.close();
+                                for (int i = 0; i < transacoes.size(); i++) {
+                                    System.out.println(transacoes.get(i));
                                 }
+                                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("transacoes.txt"));
+                                oos.writeObject(transacoes);
+                                oos.close();
+
+                                // }
                             } else if (res == true) {
                                 clientsRes.add(sslSocket);
                             }
@@ -243,6 +258,7 @@ public class Servidor implements Runnable {
                                 System.out.println("o tempo foi de: " + time);
                             }
                         } catch (NoSuchAlgorithmException ex) {
+                            System.out.println("rebentou?");
                             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
@@ -468,7 +484,8 @@ public class Servidor implements Runnable {
                         System.out.println("-----Transação-----");
                         //ObjectInputStream fromClient;
                         System.out.println("1");
-                        fromClient = new ObjectInputStream(sslSocket.getInputStream());
+                       // fromClient = new ObjectInputStream(sslSocket.getInputStream());
+                       
                         Transaction transacao = (Transaction) fromClient.readObject();
                         PublicKey EfetuaTransacao = transacao.senderPublicKey;
                         System.out.println("2");
@@ -476,6 +493,10 @@ public class Servidor implements Runnable {
                         KeyPair serv = keyUtils.LoadKeyPairServer(path, "ECDSA");
 
                         float amount = 0;
+                        ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
+                        ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
+                        transacoes = (ArrayList<Transaction>) ob.readObject();
+                        ob.close();
                         for (Transaction i : transacoes) {
                             if (i.getSenderPublicKey() == EfetuaTransacao) {
                                 amount = amount - i.getAmount();
@@ -488,15 +509,19 @@ public class Servidor implements Runnable {
                         if (amount >= transacao.getAmount()) {
                             transacao.generateSignatureServer(serv.getPrivate());
                             transacoes.add(transacao);
-                            FileOutputStream fout = new FileOutputStream(path + "\transacoes.txt");
-                            ObjectOutputStream oos = new ObjectOutputStream(fout);
+                            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("transacoes.txt"));
                             oos.writeObject(transacoes);
-                            fout.close();
+                            oos.close();
                             System.out.println("Transação com sucesso!");
                         } else {
                             System.out.println("Cliente sem dinheiro.");
                         }
-                    }else if (line.contains("Montante//") == true){
+                    } else if (line.contains("Montante//") == true) {
+                        ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
+                        ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
+
+                        transacoes = (ArrayList<Transaction>) ob.readObject();
+                        ob.close();
                         System.out.println("ei men");
                         Session ro = new Session();
                         for (int i = 0; i < sess.size(); i++) {
@@ -504,16 +529,27 @@ public class Servidor implements Runnable {
                                 ro = sess.get(i);
                             }
                         }
-                        float total=0;
-                        for(int i = 0; i<transacoes.size();i++){
-                            if (transacoes.get(i).receiverPublicKey==ro.getPk()){
-                                total=total+transacoes.get(i).getAmount();
+                        float total = 0;
+                       /* System.out.println(transacoes.size());
+                        for (int i = 0; i < transacoes.size(); i++) {
+                            System.out.println(transacoes.get(i));
+                        }*/
+                        for (int i = 0; i < transacoes.size(); i++) {
+                            System.out.println("olha " + transacoes.get(i).getReceiverPublicKey() + " .. " + ro.getPk());
+                            String s=""+transacoes.get(i).getReceiverPublicKey();
+                            String s1=""+ro.getPk();
+                            if (s.equals(s1)) {
+                                System.out.println("conta");
+                                total = total + transacoes.get(i).getAmount();
                             }
-                            if (transacoes.get(i).senderPublicKey==ro.getPk()){
-                                total=total-transacoes.get(i).getAmount();
+                            String s2=""+transacoes.get(i).getSenderPublicKey();
+                            if (s2.equals(s1)) {
+                                System.out.println("desconta");
+                                total = total - transacoes.get(i).getAmount();
                             }
                         }
-                        printWriter.println("Montante//"+total);
+                        System.out.println(total);
+                        printWriter.println("Montante//" + total);
                         printWriter.flush();
                     }
 

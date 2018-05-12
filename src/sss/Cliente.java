@@ -209,8 +209,8 @@ public class Cliente {
                         System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
-                    }else if(server[0].equals("Montante")){
-                        System.out.println("O seu saldo é: "+server[1]);
+                    } else if (server[0].equals("Montante")) {
+                        System.out.println("O seu saldo é: " + server[1]);
                     }
                 }
 
@@ -378,7 +378,8 @@ public class Cliente {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-
+                ObjectOutputStream toServer= new ObjectOutputStream(sslSocket.getOutputStream());
+                ObjectInputStream from = new ObjectInputStream(sslSocket.getInputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
@@ -562,8 +563,7 @@ public class Cliente {
                                             Transaction transacao = new Transaction(pubAlice, destinatario, valorEnviar);
                                             transacao.generateSignature(privateKeyAlice);
                                             System.out.println("Transacao => " + transacao.toString());
-                                            ObjectOutputStream toServer;
-                                            toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+
                                             toServer.writeObject(transacao);
                                             break;
                                         }
@@ -571,7 +571,7 @@ public class Cliente {
                                             printWriter.println("Montante//");
                                             printWriter.flush();
                                             break;
-                                           
+
                                         case 0: {
                                             printWriter.println("LogOut//.");
                                             printWriter.flush();

@@ -24,6 +24,9 @@ public class Transaction implements Serializable {
         this.receiverPublicKey = receiverPublicKey;
         this.amount = amount;
     }
+
+    public Transaction() {
+    }
     
     public boolean verifySignature() {
 	String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
