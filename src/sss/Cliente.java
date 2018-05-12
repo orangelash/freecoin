@@ -209,6 +209,8 @@ public class Cliente {
                         System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
+                    }else if(server[0].equals("Montante")){
+                        System.out.println("O seu saldo é: "+server[1]);
                     }
                 }
 
@@ -528,6 +530,8 @@ public class Cliente {
                                     opc2 = Ler.umInt();
                                     switch (opc2) {
                                         case 1: {
+                                            printWriter.println("transacao//.");
+                                            printWriter.flush();
                                             PublicKey pubAlice = null;
                                             PrivateKey privateKeyAlice = null;
                                             try {
@@ -564,7 +568,10 @@ public class Cliente {
                                             break;
                                         }
                                         case 2:
+                                            printWriter.println("Montante//");
+                                            printWriter.flush();
                                             break;
+                                           
                                         case 0: {
                                             printWriter.println("LogOut//.");
                                             printWriter.flush();

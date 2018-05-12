@@ -223,6 +223,7 @@ public class Servidor implements Runnable {
                                 PrivateKey servidor2 = servidor.getPrivate();
                                 transferir.generateSignatureServer(servidor2);
                                 synchronized (transacoes) {
+                                    System.out.println("pega lá mano");
                                     transferir.generateSignatureServer(servidor2);
                                     transacoes.add(transferir);
                                     FileOutputStream fout = new FileOutputStream("transacoes.txt");
@@ -466,10 +467,11 @@ public class Servidor implements Runnable {
                     } else if (line.contains("transacao//") == true) {
                         System.out.println("-----Transação-----");
                         //ObjectInputStream fromClient;
+                        System.out.println("1");
                         fromClient = new ObjectInputStream(sslSocket.getInputStream());
                         Transaction transacao = (Transaction) fromClient.readObject();
                         PublicKey EfetuaTransacao = transacao.senderPublicKey;
-                       
+                        System.out.println("2");
                         Float ValorTroca = transacao.getAmount();
                         KeyPair serv = keyUtils.LoadKeyPairServer(path, "ECDSA");
 
@@ -482,6 +484,7 @@ public class Servidor implements Runnable {
                                 amount = amount + i.getAmount();
                             }
                         }
+                        System.out.println(amount);
                         if (amount >= transacao.getAmount()) {
                             transacao.generateSignatureServer(serv.getPrivate());
                             transacoes.add(transacao);
@@ -493,6 +496,25 @@ public class Servidor implements Runnable {
                         } else {
                             System.out.println("Cliente sem dinheiro.");
                         }
+                    }else if (line.contains("Montante//") == true){
+                        System.out.println("ei men");
+                        Session ro = new Session();
+                        for (int i = 0; i < sess.size(); i++) {
+                            if (sess.get(i).getSsl() == sslSocket) {
+                                ro = sess.get(i);
+                            }
+                        }
+                        float total=0;
+                        for(int i = 0; i<transacoes.size();i++){
+                            if (transacoes.get(i).receiverPublicKey==ro.getPk()){
+                                total=total+transacoes.get(i).getAmount();
+                            }
+                            if (transacoes.get(i).senderPublicKey==ro.getPk()){
+                                total=total-transacoes.get(i).getAmount();
+                            }
+                        }
+                        printWriter.println("Montante//"+total);
+                        printWriter.flush();
                     }
 
                     if (line.trim().equals("007")) {
@@ -577,7 +599,7 @@ public class Servidor implements Runnable {
             while (true) {
 
                 if (clientsRes.size() == clients.size()) {
-
+                    System.out.println("envia desafio");
                     // if (estado == false) {
                     k = rand.randomnumber();
 
