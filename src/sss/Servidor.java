@@ -22,6 +22,7 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -62,6 +63,7 @@ public class Servidor implements Runnable {
     static long time = 30000;
     static int flag2 = 0;
     public static ArrayList<Session> sess = new ArrayList<Session>();
+    public static ArrayList<Transaction> transacoes = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -181,7 +183,7 @@ public class Servidor implements Runnable {
                 ObjectInputStream fromClient = new ObjectInputStream(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-
+                String path = Paths.get("").toAbsolutePath().toString();
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
                     String inetAddress = sslSocket.getInetAddress().getHostName();
@@ -208,6 +210,26 @@ public class Servidor implements Runnable {
                                 flag2 = 0;
                                 clientsRes.add(sslSocket);
                                 //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
+                                Session r = new Session();
+                                for (int i = 0; i < sess.size(); i++) {
+                                    if (sess.get(i).getSsl() == sslSocket) {
+                                        r = sess.get(i);
+                                    }
+                                }
+
+                                PublicKey receiver = r.getPk();
+                                KeyPair servidor = keyUtils.LoadKeyPairServer(path, "ECDSA");
+                                Transaction transferir = new Transaction(servidor.getPublic(), receiver, 1);
+                                PrivateKey servidor2 = servidor.getPrivate();
+                                transferir.generateSignatureServer(servidor2);
+                                synchronized (transacoes) {
+                                    transferir.generateSignatureServer(servidor2);
+                                    transacoes.add(transferir);
+                                    FileOutputStream fout = new FileOutputStream("transacoes.txt");
+                                    ObjectOutputStream oos = new ObjectOutputStream(fout);
+                                    oos.writeObject(transacoes);
+                                    fout.close();
+                                }
                             } else if (res == true) {
                                 clientsRes.add(sslSocket);
                             }
@@ -224,7 +246,7 @@ public class Servidor implements Runnable {
                         }
                     }
                     if (line.contains("registar//") == true) {
-                        String path = Paths.get("").toAbsolutePath().toString();
+
                         String[] chavePubCliente = line.split("//");
                         System.out.println("Quero registar!");
                         //System.out.println("ChavepublicaCliente=> "+chavePubCliente[1]);
@@ -271,7 +293,6 @@ public class Servidor implements Runnable {
                     } else if (line.contains("login//") == true) {
                         clients.add(sslSocket);
                         clientsRes.add(sslSocket);
-                        String path = Paths.get("").toAbsolutePath().toString();
 
                         // 1 - receber chave pública do cliente
                         String[] chavePubCliente = line.split("//");
@@ -351,7 +372,7 @@ public class Servidor implements Runnable {
                         String[] leitura = line.split("//");
                         String desafio = leitura[1];
                         System.out.println("" + desafio);
-                        String path = Paths.get("").toAbsolutePath().toString();
+
                         KeyPair server = keyUtils.LoadKeyPairServer(path, "ECDSA");
                         byte[] sign = StringUtil.applyECDSASig(server.getPrivate(), desafio);
                         byte[] assinado = (byte[]) fromClient.readObject();
@@ -442,6 +463,36 @@ public class Servidor implements Runnable {
                         sess.remove(ro);
                         clients.remove(sslSocket);
                         clientsRes.remove(sslSocket);
+                    } else if (line.contains("transacao//") == true) {
+                        System.out.println("-----Transação-----");
+                        //ObjectInputStream fromClient;
+                        fromClient = new ObjectInputStream(sslSocket.getInputStream());
+                        Transaction transacao = (Transaction) fromClient.readObject();
+                        PublicKey EfetuaTransacao = transacao.senderPublicKey;
+                       
+                        Float ValorTroca = transacao.getAmount();
+                        KeyPair serv = keyUtils.LoadKeyPairServer(path, "ECDSA");
+
+                        float amount = 0;
+                        for (Transaction i : transacoes) {
+                            if (i.getSenderPublicKey() == EfetuaTransacao) {
+                                amount = amount - i.getAmount();
+                            }
+                            if (i.getReceiverPublicKey() == EfetuaTransacao) {
+                                amount = amount + i.getAmount();
+                            }
+                        }
+                        if (amount >= transacao.getAmount()) {
+                            transacao.generateSignatureServer(serv.getPrivate());
+                            transacoes.add(transacao);
+                            FileOutputStream fout = new FileOutputStream(path + "\transacoes.txt");
+                            ObjectOutputStream oos = new ObjectOutputStream(fout);
+                            oos.writeObject(transacoes);
+                            fout.close();
+                            System.out.println("Transação com sucesso!");
+                        } else {
+                            System.out.println("Cliente sem dinheiro.");
+                        }
                     }
 
                     if (line.trim().equals("007")) {

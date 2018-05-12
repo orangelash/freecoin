@@ -30,6 +30,7 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -526,8 +527,42 @@ public class Cliente {
                                     System.out.println("-----BEM-VINDO AO FR€€COIN-----\n1-Fazer Transação\n2-Consultar Transações Associadas \n0-Sair");
                                     opc2 = Ler.umInt();
                                     switch (opc2) {
-                                        case 1:
+                                        case 1: {
+                                            PublicKey pubAlice = null;
+                                            PrivateKey privateKeyAlice = null;
+                                            try {
+                                                //KeyFactory keyFactory = KeyFactory.getInstance("ECDSA");
+                                                // X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyRecberByte);
+                                                //publicKey = keyFactory.generatePublic(publicKeySpec);
+                                                //pubAlice = LoadAlicePublicKey(path,"ECDSA");
+                                                KeyPair alice = keyUtils.LoadKeyPair(path, "ECDSA");
+                                                privateKeyAlice = alice.getPrivate();
+                                                pubAlice = alice.getPublic();
+                                            } catch (Exception e) {
+                                                System.out.println("rebentei todo");
+                                            }
+
+                                            System.out.println("Insira o valor a transferir");
+                                            float valorEnviar = Ler.umFloat();
+
+                                            PublicKey destinatario = null;
+                                            do {
+                                                System.out.println("Insira o caminho da chave publica do destinatário");
+                                                String pasta = Ler.umaString();
+                                                try {
+                                                    destinatario = keyUtils.LoadAlicePublicKey(pasta, "ECDSA");
+                                                } catch (Exception e) {
+                                                    System.out.println("deu aqui");
+                                                }
+                                            } while (destinatario == null);
+                                            Transaction transacao = new Transaction(pubAlice, destinatario, valorEnviar);
+                                            transacao.generateSignature(privateKeyAlice);
+                                            System.out.println("Transacao => " + transacao.toString());
+                                            ObjectOutputStream toServer;
+                                            toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+                                            toServer.writeObject(transacao);
                                             break;
+                                        }
                                         case 2:
                                             break;
                                         case 0: {
