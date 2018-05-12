@@ -135,9 +135,6 @@ public class Servidor implements Runnable {
             System.out.println("SSL server started");
             while (!isServerDone) {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
-                clients.add(sslSocket);
-                clientsRes.add(sslSocket);
-
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
                 t3.start();
@@ -164,10 +161,7 @@ public class Servidor implements Runnable {
 
         public void run() {
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-
-           
-                
-       
+            Session p;
             try {
                 // Start handshake
                 sslSocket.startHandshake();
@@ -275,14 +269,16 @@ public class Servidor implements Runnable {
                         /* System.out.println(cadeia);*/
                         System.out.println("TUDO OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     } else if (line.contains("login//") == true) {
+                        clients.add(sslSocket);
+                        clientsRes.add(sslSocket);
                         String path = Paths.get("").toAbsolutePath().toString();
 
                         // 1 - receber chave pública do cliente
                         String[] chavePubCliente = line.split("//");
                         System.out.println("Quero entrar!");
                         System.out.println("ChavepublicaCliente=> " + chavePubCliente[1]);
-                        //receber chave publica
 
+                        //receber chave publica
                         byte[] publicKeyX = Base64.getDecoder().decode(chavePubCliente[1]);
                         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
@@ -291,67 +287,161 @@ public class Servidor implements Runnable {
                         KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
                         PublicKey alice = kf.generatePublic(ks);
                         System.out.println("a= " + alice);
-
-                        boolean existePK = true;
-                        // 2 - verifica se a chave pública existe, se não existir recusa a ligação
-                        try {
-                            PublicKey aliceExiste = keyUtils.LoadAlicePublicKey(path + "/pks/" + StringUtil.getHexString(alice.getEncoded()), "ECDSA");
-                        } catch (Exception e) {
-                            existePK = false;
-                        }
-
-                        if (existePK) {
-                            // 3 - autenticação mutua
-
-                            // 4 - gera chaves de sessão para o cliente
-                            //chamar diffie helman para gerar chaves de sessao
-                            byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), alice);
-                            System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
-
-                            byte[] sessionKeyA = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyB = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyC = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyD = new byte[sessionKey.length + 1];
-                            sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyA[sessionKeyA.length - 1] = 65;
-                            sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyB[sessionKeyA.length - 1] = 66;
-                            sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyC[sessionKeyA.length - 1] = 67;
-                            sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyD[sessionKeyA.length - 1] = 68;
-
-                            MessageDigest digest;
-                            digest = MessageDigest.getInstance("SHA-256");
-                            byte[] hash = digest.digest(sessionKeyA);
-                            String chaveA = DatatypeConverter.printHexBinary(hash);
-
-                            hash = digest.digest(sessionKeyB);
-                            String chaveB = DatatypeConverter.printHexBinary(hash);
-
-                            hash = digest.digest(sessionKeyC);
-                            String chaveC = DatatypeConverter.printHexBinary(hash);
-
-                            hash = digest.digest(sessionKeyD);
-                            String chaveD = DatatypeConverter.printHexBinary(hash);
-                            Session s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, alice);
-                            sess.add(s);
-
-                        }
+                        p = new Session(sslSocket, alice);
+                        sess.add(p);
+//                        boolean existePK = true;
+//                        // 2 - verifica se a chave pública existe, se não existir recusa a ligação
+//                        try {
+//                            PublicKey aliceExiste = keyUtils.LoadAlicePublicKey(path + "/pks/" + StringUtil.getHexString(alice.getEncoded()), "ECDSA");
+//                        } catch (Exception e) {
+//                            existePK = false;
+//                        }
+//
+//                        if (existePK) {
+//                            // 3 - autenticação mutua
+//
+//                            // 4 - gera chaves de sessão para o cliente
+//                            //chamar diffie helman para gerar chaves de sessao
+//                            byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), alice);
+//                            System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+//
+//                            byte[] sessionKeyA = new byte[sessionKey.length + 1];
+//                            byte[] sessionKeyB = new byte[sessionKey.length + 1];
+//                            byte[] sessionKeyC = new byte[sessionKey.length + 1];
+//                            byte[] sessionKeyD = new byte[sessionKey.length + 1];
+//                            sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+//                            sessionKeyA[sessionKeyA.length - 1] = 65;
+//                            sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+//                            sessionKeyB[sessionKeyA.length - 1] = 66;
+//                            sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+//                            sessionKeyC[sessionKeyA.length - 1] = 67;
+//                            sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+//                            sessionKeyD[sessionKeyA.length - 1] = 68;
+//
+//                            MessageDigest digest;
+//                            digest = MessageDigest.getInstance("SHA-256");
+//                            byte[] hash = digest.digest(sessionKeyA);
+//                            String chaveA = DatatypeConverter.printHexBinary(hash);
+//
+//                            hash = digest.digest(sessionKeyB);
+//                            String chaveB = DatatypeConverter.printHexBinary(hash);
+//
+//                            hash = digest.digest(sessionKeyC);
+//                            String chaveC = DatatypeConverter.printHexBinary(hash);
+//
+//                            hash = digest.digest(sessionKeyD);
+//                            String chaveD = DatatypeConverter.printHexBinary(hash);
+//                            Session s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, alice);
+//                            sess.add(s);
+//
+//                        }
                     } else if (line.contains("authDesafio//")) {
-                        printWriter.println("respostaDesafio//.");
+                        /*--------------------------------------*/
+
+                        SecureRandom random = new SecureRandom();
+                        int max = 500;
+                        int min = 10;
+
+                        int aux = random.nextInt(max - min + 1) + min;
+                        RandomString desafiotoClient = new RandomString(aux);
+                        String desafioEnviado = desafiotoClient.nextString();
+                        printWriter.println("respostaDesafio//" + desafioEnviado);
                         printWriter.flush();
+
                         String[] leitura = line.split("//");
                         String desafio = leitura[1];
-                        System.out.println(""+desafio);
+                        System.out.println("" + desafio);
                         String path = Paths.get("").toAbsolutePath().toString();
-
                         KeyPair server = keyUtils.LoadKeyPairServer(path, "ECDSA");
                         byte[] sign = StringUtil.applyECDSASig(server.getPrivate(), desafio);
+                        byte[] assinado = (byte[]) fromClient.readObject();
                         toServer.writeObject(sign);
-                       
                         System.out.println("" + Arrays.toString(sign));
+                        Session r = new Session();
+                        for (int i = 0; i < sess.size(); i++) {
+                            if (sess.get(i).getSsl() == sslSocket) {
+                                r = sess.get(i);
+                            }
+                        }
+                        try {
 
+                            boolean existePK = true;
+                            // 2 - verifica se a chave pública existe, se não existir recusa a ligação
+                            try {
+
+                                PublicKey alice = r.getPk();
+                                PublicKey aliceExiste = keyUtils.LoadAlicePublicKey(path + "/pks/" + StringUtil.getHexString(alice.getEncoded()), "ECDSA");
+                            } catch (Exception e) {
+                                existePK = false;
+                            }
+
+                            if (existePK) {
+                                // 3 - autenticação mutua
+
+                                // 4 - gera chaves de sessão para o cliente
+                                //chamar diffie helman para gerar chaves de sessao
+                                byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), r.getPk());
+                                System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+
+                                byte[] sessionKeyA = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyB = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyC = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyD = new byte[sessionKey.length + 1];
+                                sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyA[sessionKeyA.length - 1] = 65;
+                                sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyB[sessionKeyA.length - 1] = 66;
+                                sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyC[sessionKeyA.length - 1] = 67;
+                                sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyD[sessionKeyA.length - 1] = 68;
+
+                                MessageDigest digest;
+                                digest = MessageDigest.getInstance("SHA-256");
+                                byte[] hash = digest.digest(sessionKeyA);
+                                String chaveA = DatatypeConverter.printHexBinary(hash);
+
+                                hash = digest.digest(sessionKeyB);
+                                String chaveB = DatatypeConverter.printHexBinary(hash);
+
+                                hash = digest.digest(sessionKeyC);
+                                String chaveC = DatatypeConverter.printHexBinary(hash);
+
+                                hash = digest.digest(sessionKeyD);
+                                String chaveD = DatatypeConverter.printHexBinary(hash);
+                                r.setChaveA(chaveA);
+                                r.setChaveB(chaveB);
+                                r.setChaveC(chaveC);
+                                r.setChaveD(chaveD);
+                                sess.add(r);
+
+                            }
+                            if (StringUtil.verifyECDSASig(r.getPk(), desafioEnviado, assinado)) {
+                                System.out.println("Desafio correto, cliente autenticado.");
+                            } else {
+                                System.out.println("Desafio incorretoo, cliente não autenticado.");
+                                sess.remove(r);
+                                clients.remove(sslSocket);
+                                clientsRes.remove(sslSocket);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println("Desafio incorreto, cliente não autenticado.");
+                            sess.remove(r);
+                            clients.remove(sslSocket);
+                            clientsRes.remove(sslSocket);
+                        }
+
+                    } else if (line.contains("LogOut//")) {
+                        Session ro = new Session();
+                        for (int i = 0; i < sess.size(); i++) {
+                            if (sess.get(i).getSsl() == sslSocket) {
+                                ro = sess.get(i);
+                            }
+                        }
+                        sess.remove(ro);
+                        clients.remove(sslSocket);
+                        clientsRes.remove(sslSocket);
                     }
 
                     if (line.trim().equals("007")) {

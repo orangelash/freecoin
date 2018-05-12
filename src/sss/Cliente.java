@@ -128,7 +128,6 @@ public class Cliente {
             // Create socket
             SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(this.host, this.port);
 
-            new ClientThread(sslSocket, queue).start();
             new ClientThreadEnvia(sslSocket, queue).start();
             new ClientThreadEscuta(sslSocket, queue).start();
         } catch (Exception ex) {
@@ -200,6 +199,13 @@ public class Cliente {
 
                         //keyUtils.bytesToHex(server[1]);
                     } else if (server[0].equals("respostaDesafio")) {
+                        ////////VARIAVEIS
+                        String path = Paths.get("").toAbsolutePath().toString();
+                        KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
+                        byte[] sign = StringUtil.applyECDSASig(clienteKeys.getPrivate(), server[1]);
+                        toServer.writeObject(sign);
+
+                        System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
                     }
@@ -385,7 +391,7 @@ public class Cliente {
                         }
                     }
 
-                    System.out.println("-----BEM-VINDO AO FR€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
+                    System.out.println("-----BEM-VINDO AO FR€€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
                     opc = Ler.umInt();
                     switch (opc) {
                         case 1: {
@@ -441,6 +447,7 @@ public class Cliente {
                             break;
                         }
                         case 2: {
+                            boolean continua = false;
                             System.out.println("entrar");
                             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
                             String path = Paths.get("").toAbsolutePath().toString();
@@ -468,45 +475,70 @@ public class Cliente {
                             printWriter.flush();
                             //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
                             sleep(1000);
-                            try{
-                                if(StringUtil.verifyECDSASig(server, desafioEnviado, respostaDesafio))
+                            try {
+                                if (StringUtil.verifyECDSASig(server, desafioEnviado, respostaDesafio)) {
                                     System.out.println("Desafio correto, servidor autenticado.");
-                                else
+                                    continua = true;
+                                } else {
                                     System.out.println("Desafio incorreto, servidor não autenticado.");
-                            }catch(Exception e){
+                                    continua = false;
+                                }
+                            } catch (Exception e) {
                                 System.out.println("Desafio incorreto, servidor não autenticado.");
+                                continua = false;
                             }
                             //  2.2) ver se o desafio que o servidor assinou está correto com o certificado dele, se sim, continuar, caso contrário aborta
                             // 3 - Gerar chaves de sessão
-                            byte[] sessionKey = keyUtils.doECDH(clienteKeys.getPrivate(), server);
-                            System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
-                            byte[] sessionKeyA = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyB = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyC = new byte[sessionKey.length + 1];
-                            byte[] sessionKeyD = new byte[sessionKey.length + 1];
-                            sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyA[sessionKeyA.length - 1] = 65;
-                            sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyB[sessionKeyA.length - 1] = 66;
-                            sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyC[sessionKeyA.length - 1] = 67;
-                            sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
-                            sessionKeyD[sessionKeyA.length - 1] = 68;
+                            if (continua == true) {
+                                new ClientThread(sslSocket, queue).start();
+                                byte[] sessionKey = keyUtils.doECDH(clienteKeys.getPrivate(), server);
+                                System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+                                byte[] sessionKeyA = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyB = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyC = new byte[sessionKey.length + 1];
+                                byte[] sessionKeyD = new byte[sessionKey.length + 1];
+                                sessionKeyA = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyA[sessionKeyA.length - 1] = 65;
+                                sessionKeyB = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyB[sessionKeyA.length - 1] = 66;
+                                sessionKeyC = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyC[sessionKeyA.length - 1] = 67;
+                                sessionKeyD = Arrays.copyOf(sessionKey, sessionKey.length);
+                                sessionKeyD[sessionKeyA.length - 1] = 68;
 
-                            MessageDigest digest;
-                            digest = MessageDigest.getInstance("SHA-256");
-                            byte[] hash = digest.digest(sessionKeyA);
-                            String chaveA = DatatypeConverter.printHexBinary(hash);
+                                MessageDigest digest;
+                                digest = MessageDigest.getInstance("SHA-256");
+                                byte[] hash = digest.digest(sessionKeyA);
+                                String chaveA = DatatypeConverter.printHexBinary(hash);
 
-                            hash = digest.digest(sessionKeyB);
-                            String chaveB = DatatypeConverter.printHexBinary(hash);
+                                hash = digest.digest(sessionKeyB);
+                                String chaveB = DatatypeConverter.printHexBinary(hash);
 
-                            hash = digest.digest(sessionKeyC);
-                            String chaveC = DatatypeConverter.printHexBinary(hash);
+                                hash = digest.digest(sessionKeyC);
+                                String chaveC = DatatypeConverter.printHexBinary(hash);
 
-                            hash = digest.digest(sessionKeyD);
-                            String chaveD = DatatypeConverter.printHexBinary(hash);
-                            s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, clienteKeys.getPublic());
+                                hash = digest.digest(sessionKeyD);
+                                String chaveD = DatatypeConverter.printHexBinary(hash);
+                                s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, clienteKeys.getPublic());
+                                int opc2 = 0;
+                                do {
+
+                                    System.out.println("-----BEM-VINDO AO FR€€COIN-----\n1-Fazer Transação\n2-Consultar Transações Associadas \n0-Sair");
+                                    opc2 = Ler.umInt();
+                                    switch (opc2) {
+                                        case 1:
+                                            break;
+                                        case 2:
+                                            break;
+                                        case 0: {
+                                            printWriter.println("LogOut//.");
+                                            printWriter.flush();
+                                            break;
+                                        }
+                                    }
+                                } while (opc2 != 0);
+
+                            }
 
                             break;
                         }

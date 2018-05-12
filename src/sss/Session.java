@@ -25,6 +25,11 @@ public class Session {
         return chaveA;
     }
 
+    public Session(SSLSocket ssl, PublicKey pk) {
+        this.ssl = ssl;
+        this.pk = pk;
+    }
+
     public void setChaveA(String chaveA) {
         this.chaveA = chaveA;
     }
