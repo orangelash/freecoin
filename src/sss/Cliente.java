@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -50,6 +51,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
+import static sss.Cliente.ClientThreadEscuta.respostaDesafio;
 
 public class Cliente {
 
@@ -60,6 +62,7 @@ public class Cliente {
     private String host = "192.168.137.1";
     private int port = 9999;
     private static X509Certificate certi = null;
+    static Session s;
 
     public static void main(String[] args) {
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
@@ -143,6 +146,7 @@ public class Cliente {
         private static int nonce;
         private final BlockingQueue<String> queue;
         public SSLSocket sslSocket = null;
+        static byte[] respostaDesafio;
 
         // private static int bits=15;
         ClientThreadEscuta(SSLSocket sslSocket, BlockingQueue<String> q) {
@@ -163,7 +167,9 @@ public class Cliente {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-
+                ObjectInputStream fromClient;
+                fromClient = new ObjectInputStream(sslSocket.getInputStream());
+                ObjectOutputStream toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
@@ -187,13 +193,15 @@ public class Cliente {
                         byte[] cadeia = Base64.getDecoder().decode(server[1]);
                         System.out.println(byteArr);
                         System.out.println("aqui: " + server[1].getBytes(StandardCharsets.UTF_8));*/
-                        ObjectInputStream fromClient;
-                        fromClient = new ObjectInputStream(sslSocket.getInputStream());
+
                         X509Certificate cert = (X509Certificate) fromClient.readObject();
                         System.out.println(cert);
                         certi = cert;
 
                         //keyUtils.bytesToHex(server[1]);
+                    } else if (server[0].equals("respostaDesafio")) {
+                        respostaDesafio = (byte[]) fromClient.readObject();
+                        System.out.println("" + Arrays.toString(respostaDesafio));
                     }
                 }
 
@@ -413,12 +421,11 @@ public class Cliente {
                                 printWriter.println("registar//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
                                 printWriter.flush();
 
-
                                 // 4 - ESCREVER CERTIFICADO 
                                 sleep(2000);
                                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                                 try {
-                                    certi.verify(novasChaves.getPublic());
+                                    certi.verify(server);
                                     System.out.println("verificado");
                                     FileOutputStream fout = new FileOutputStream(path + "/meu.cer");
                                     fout.write(certi.getEncoded());
@@ -448,7 +455,27 @@ public class Cliente {
                             printWriter.flush();
 
                             // 2 - Fazer autenticação mutua (AMBOS TÊM CERTIFICADOS UM DO OUTRO)
+                            SecureRandom random = new SecureRandom();
+
+                            int max = 500;
+                            int min = 10;
+
+                            int aux = random.nextInt(max - min + 1) + min;
+
+                            RandomString desafio = new RandomString(aux);
+                            String desafioEnviado = desafio.nextString();
+                            printWriter.println("authDesafio//" + desafioEnviado);
+                            printWriter.flush();
                             //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
+                            sleep(1000);
+                            try{
+                                if(StringUtil.verifyECDSASig(server, desafioEnviado, respostaDesafio))
+                                    System.out.println("Desafio correto, servidor autenticado.");
+                                else
+                                    System.out.println("Desafio incorreto, servidor não autenticado.");
+                            }catch(Exception e){
+                                System.out.println("Desafio incorreto, servidor não autenticado.");
+                            }
                             //  2.2) ver se o desafio que o servidor assinou está correto com o certificado dele, se sim, continuar, caso contrário aborta
                             // 3 - Gerar chaves de sessão
                             byte[] sessionKey = keyUtils.doECDH(clienteKeys.getPrivate(), server);
@@ -479,6 +506,7 @@ public class Cliente {
 
                             hash = digest.digest(sessionKeyD);
                             String chaveD = DatatypeConverter.printHexBinary(hash);
+                            s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, clienteKeys.getPublic());
 
                             break;
                         }

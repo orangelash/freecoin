@@ -3,8 +3,10 @@ package sss;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -59,6 +61,7 @@ public class Servidor implements Runnable {
     static long endTime = 0;
     static long time = 30000;
     static int flag2 = 0;
+    public static ArrayList<Session> sess = new ArrayList<Session>();
 
     public static void main(String[] args) {
 
@@ -162,6 +165,9 @@ public class Servidor implements Runnable {
         public void run() {
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
 
+           
+                
+       
             try {
                 // Start handshake
                 sslSocket.startHandshake();
@@ -176,7 +182,9 @@ public class Servidor implements Runnable {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-
+                ObjectOutputStream toServer;
+                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+                ObjectInputStream fromClient = new ObjectInputStream(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
@@ -259,8 +267,7 @@ public class Servidor implements Runnable {
                         //criar chave publica atraves dos bytes recebidos
                         printWriter.println("cadeia//.");
                         printWriter.flush();
-                        ObjectOutputStream toServer;
-                        toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+
                         //byte[] frame = certClient.getEncoded();
                         toServer.writeObject(certClient);
 
@@ -317,9 +324,34 @@ public class Servidor implements Runnable {
                             MessageDigest digest;
                             digest = MessageDigest.getInstance("SHA-256");
                             byte[] hash = digest.digest(sessionKeyA);
-                            String hex = DatatypeConverter.printHexBinary(hash);
-                            System.out.println("" + hex);
+                            String chaveA = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyB);
+                            String chaveB = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyC);
+                            String chaveC = DatatypeConverter.printHexBinary(hash);
+
+                            hash = digest.digest(sessionKeyD);
+                            String chaveD = DatatypeConverter.printHexBinary(hash);
+                            Session s = new Session(chaveA, chaveB, chaveC, chaveD, sslSocket, alice);
+                            sess.add(s);
+
                         }
+                    } else if (line.contains("authDesafio//")) {
+                        printWriter.println("respostaDesafio//.");
+                        printWriter.flush();
+                        String[] leitura = line.split("//");
+                        String desafio = leitura[1];
+                        System.out.println(""+desafio);
+                        String path = Paths.get("").toAbsolutePath().toString();
+
+                        KeyPair server = keyUtils.LoadKeyPairServer(path, "ECDSA");
+                        byte[] sign = StringUtil.applyECDSASig(server.getPrivate(), desafio);
+                        toServer.writeObject(sign);
+                       
+                        System.out.println("" + Arrays.toString(sign));
+
                     }
 
                     if (line.trim().equals("007")) {
@@ -329,6 +361,13 @@ public class Servidor implements Runnable {
                 // Write data
                 sslSocket.close();
             } catch (Exception ex) {
+                Session r = new Session();
+                for (int i = 0; i < sess.size(); i++) {
+                    if (sess.get(i).getSsl() == sslSocket) {
+                        r = sess.get(i);
+                    }
+                }
+                sess.remove(r);
                 clients.remove(sslSocket);
                 clientsRes.remove(sslSocket);
                 System.out.println("foi neste que rebentou 3");

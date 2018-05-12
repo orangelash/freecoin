@@ -79,6 +79,7 @@ public class keyUtils {
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
         // Read Public Key.
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         File filePublicKey = new File(path + "/public.key");
         FileInputStream fis = new FileInputStream(path + "/public.key");
         byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
@@ -109,6 +110,7 @@ public class keyUtils {
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
         // Read Public Key.
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         File filePublicKey = new File(path + "/public_server.key");
         FileInputStream fis = new FileInputStream(path + "/public_server.key");
         byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
@@ -136,6 +138,7 @@ public class keyUtils {
     }
 
     public static PublicKey LoadServerPublicKey(String path, String algorithm) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         File filePublicKey = new File(path + "/public_server.key");
         FileInputStream fis = new FileInputStream(path + "/public_server.key");
         byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
@@ -150,6 +153,7 @@ public class keyUtils {
     }
     
     public static PublicKey LoadAlicePublicKey(String path, String algorithm) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         File filePublicKey = new File(path);
         FileInputStream fis = new FileInputStream(path);
         byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
@@ -172,6 +176,7 @@ public class keyUtils {
     }
 
     public static byte[] doECDH(PrivateKey server, PublicKey alice) throws Exception {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         KeyAgreement ka = KeyAgreement.getInstance("ECDH", "BC");
         ka.init(server);
         ka.doPhase(alice, true);

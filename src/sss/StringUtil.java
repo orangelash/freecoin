@@ -49,6 +49,7 @@ public class StringUtil {
 
     //Applies ECDSA Signature and returns the result ( as bytes ).
     public static byte[] applyECDSASig(PrivateKey privateKey, String input) {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         Signature dsa;
         byte[] output = new byte[0];
         try {
@@ -67,6 +68,7 @@ public class StringUtil {
     //Verifies a String signature 
     public static boolean verifyECDSASig(PublicKey publicKey, String data, byte[] signature) {
         try {
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
             Signature ecdsaVerify = Signature.getInstance("ECDSA", "BC");
             ecdsaVerify.initVerify(publicKey);
             ecdsaVerify.update(data.getBytes());
