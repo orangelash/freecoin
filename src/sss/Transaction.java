@@ -9,9 +9,8 @@ import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
-
-
 public class Transaction implements Serializable {
+
     public PublicKey senderPublicKey; //the one who gives the money
     public PublicKey receiverPublicKey; // the one to receive
     public float amount; // amount of freecoin to be sent
@@ -26,29 +25,32 @@ public class Transaction implements Serializable {
 
     public Transaction() {
     }
-    
+
     public boolean verifySignature() {
-	String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
-	return StringUtil.verifyECDSASig(senderPublicKey, data, signatureSender);
+        String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
+        return StringUtil.verifyECDSASig(senderPublicKey, data, signatureSender);
     }
-    
+
     /**
      * Generate Signature of the sender
-     * @param privateKey 
+     *
+     * @param privateKey
      */
     public void generateSignature(PrivateKey privateKey) {
-            String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
-            signatureSender = StringUtil.applyECDSASig(privateKey,data);		
+        String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
+        signatureSender = StringUtil.applyECDSASig(privateKey, data);
     }
+
     /**
      * Generate Signature of the server
-     * @param privateKey 
+     *
+     * @param privateKey
      */
     public void generateSignatureServer(PrivateKey privateKey) {
-            String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
-            signatureServer = StringUtil.applyECDSASig(privateKey,data);		
+        String data = StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount);
+        signatureServer = StringUtil.applyECDSASig(privateKey, data);
     }
-    
+
     public PublicKey getSenderPublicKey() {
         return senderPublicKey;
     }
@@ -93,7 +95,9 @@ public class Transaction implements Serializable {
     public String toString() {
         return "Transaction{" + "senderPublicKey=" + senderPublicKey + ", receiverPublicKey=" + receiverPublicKey + ", amount=" + amount + ", signatureSender=" + signatureSender + ", signatureServer=" + signatureServer + '}';
     }
-    
-    
-}
 
+    public String getDataSignature() {
+        return (StringUtil.getStringFromKey(senderPublicKey) + StringUtil.getStringFromKey(receiverPublicKey) + Float.toString(amount));
+    }
+
+}

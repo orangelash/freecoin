@@ -36,6 +36,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
@@ -210,6 +211,18 @@ public class Cliente {
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
                     } else if (server[0].equals("Montante")) {
+                        String path = Paths.get("").toAbsolutePath().toString();
+                        KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
+                        ArrayList<Transaction>tran=(ArrayList<Transaction>) fromClient.readObject();
+                        for(int i=0;i<tran.size();i++)
+                        {
+                            String s=""+tran.get(i).getSenderPublicKey();
+                            String s1=""+clienteKeys.getPublic();
+                            if(s.equals(s1))
+                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: -"+tran.get(i).getAmount());
+                            else
+                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: +"+tran.get(i).getAmount());
+                        }
                         System.out.println("O seu saldo é: " + server[1]);
                     }
                 }
