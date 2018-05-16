@@ -5,10 +5,7 @@
  */
 package sss;
 
-/**
- *
- * @author Vasco Lopes
- */
+
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Base64;

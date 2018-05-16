@@ -8,10 +8,7 @@ package sss;
 import java.security.PublicKey;
 import javax.net.ssl.SSLSocket;
 
-/**
- *
- * @author Asus
- */
+
 public class Session {
 
     public String chaveA; //cifrar cliente servidor

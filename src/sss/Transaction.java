@@ -6,12 +6,11 @@
 package sss;
 
 import java.io.Serializable;
-import java.security.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
-/**
- *
- * @author Vasco Lopes
- */
+
+
 public class Transaction implements Serializable {
     public PublicKey senderPublicKey; //the one who gives the money
     public PublicKey receiverPublicKey; // the one to receive

@@ -23,10 +23,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.KeyAgreement;
 
-/**
- *
- * @author Vasco Lopes
- */
+
 public class keyUtils {
 
     final protected static char[] hexArray = "0123456789abcdef".toCharArray();

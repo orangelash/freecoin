@@ -50,10 +50,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 
-/**
- *
- * @author Guilherme
- */
+
 public class CertOps {
 
     X509Certificate createCertificate(boolean isServer, PrivateKey sk, PublicKey pk) throws FileNotFoundException {

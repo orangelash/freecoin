@@ -64,6 +64,8 @@ public class Cliente {
     private int port = 9999;
     private static X509Certificate certi = null;
     static Session s;
+    public static ObjectOutputStream toServer;
+    public static ObjectInputStream fromClient;
 
     public static void main(String[] args) {
         BlockingQueue<String> q = new LinkedBlockingQueue<String>();
@@ -160,16 +162,14 @@ public class Cliente {
             try {
                 // Start handshake
                 sslSocket.startHandshake();
-
+                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+                fromClient = new ObjectInputStream(sslSocket.getInputStream());
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-                ObjectInputStream fromClient;
-                fromClient = new ObjectInputStream(sslSocket.getInputStream());
-                ObjectOutputStream toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 while (true) {
@@ -378,8 +378,6 @@ public class Cliente {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-                ObjectOutputStream toServer;
-                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
 
@@ -564,7 +562,7 @@ public class Cliente {
                                             Transaction transacao = new Transaction(pubAlice, destinatario, valorEnviar);
                                             transacao.generateSignature(privateKeyAlice);
                                             System.out.println("Transacao => " + transacao.toString());
-                                           
+
                                             toServer.writeObject(transacao);
                                             System.out.println("enviei");
                                             break;

@@ -63,6 +63,8 @@ public class Servidor implements Runnable {
     static long time = 30000;
     static int flag2 = 0;
     public static ArrayList<Session> sess = new ArrayList<Session>();
+    public static ObjectOutputStream toServer;
+    public static ObjectInputStream fromClient;
     //public static ArrayList<Transaction> transacoes = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -175,7 +177,8 @@ public class Servidor implements Runnable {
             try {
                 // Start handshake
                 sslSocket.startHandshake();
-
+                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
+                fromClient = new ObjectInputStream(sslSocket.getInputStream());
                 // Get session after the connection is established
                 SSLSession sslSession = sslSocket.getSession();
 
@@ -186,9 +189,6 @@ public class Servidor implements Runnable {
                 // Start handling application content
                 InputStream inputStream = sslSocket.getInputStream();
                 OutputStream outputStream = sslSocket.getOutputStream();
-                ObjectOutputStream toServer;
-                toServer = new ObjectOutputStream(sslSocket.getOutputStream());
-                ObjectInputStream fromClient = new ObjectInputStream(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
                 String path = Paths.get("").toAbsolutePath().toString();
@@ -487,7 +487,7 @@ public class Servidor implements Runnable {
                         System.out.println("1");
                         //fromClient = new ObjectInputStream(sslSocket.getInputStream());
 
-                        Transaction transacao =  (Transaction) fromClient.readObject();
+                        Transaction transacao =  (Transaction) fromClient.readObject(); //ISTO DA ERRO
                         System.out.println(transacao);
                         System.out.println("nao esto");
                         PublicKey EfetuaTransacao = transacao.senderPublicKey;
