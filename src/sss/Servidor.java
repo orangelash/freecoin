@@ -147,13 +147,14 @@ public class Servidor implements Runnable {
 //                oos.close();
 //                fout.close();
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
+                
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
                 t3.start();
 
-                ServerThreadEnvia myRunnable1 = new ServerThreadEnvia(sslSocket);
-                Thread t1 = new Thread(myRunnable1);
-                t1.start();
+                //ServerThreadEnvia myRunnable1 = new ServerThreadEnvia(sslSocket);
+                //Thread t1 = new Thread(myRunnable1);
+              //  t1.start();
 
             }
         } catch (Exception ex) {
@@ -375,11 +376,21 @@ public class Servidor implements Runnable {
 //                        }
                     } else if (line.contains("authDesafio//")) {
                         /*--------------------------------------*/
+                        
+                        String[] auxKey = line.split("//");
+                        byte[] publicKeyX = Base64.getDecoder().decode(auxKey[2]);
+                        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
+                        //criar chave publica atraves dos bytes recebidos (DO CLIENTE)
+                        X509EncodedKeySpec ks = new X509EncodedKeySpec(publicKeyX);
+                        KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
+                        PublicKey efemeralPK = kf.generatePublic(ks);
+                        
+                        
                         SecureRandom random = new SecureRandom();
                         int max = 500;
                         int min = 10;
-
+                        
                         int aux = random.nextInt(max - min + 1) + min;
                         RandomString desafiotoClient = new RandomString(aux);
                         String desafioEnviado = desafiotoClient.nextString();
@@ -392,6 +403,7 @@ public class Servidor implements Runnable {
 
                         KeyPair server = keyUtils.LoadKeyPairServer(path, "ECDSA");
                         byte[] sign = StringUtil.applyECDSASig(server.getPrivate(), desafio);
+                        System.out.println("");
                         byte[] assinado = (byte[]) fromClient.readObject();
                         toServer.writeObject(sign);
                         System.out.println("" + Arrays.toString(sign));
@@ -418,7 +430,7 @@ public class Servidor implements Runnable {
 
                                 // 4 - gera chaves de sessão para o cliente
                                 //chamar diffie helman para gerar chaves de sessao
-                                byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), r.getPk());
+                                byte[] sessionKey = keyUtils.doECDH(keyUtils.LoadKeyPairServer(path, "ECDSA").getPrivate(), efemeralPK);
                                 System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
 
                                 byte[] sessionKeyA = new byte[sessionKey.length + 1];
@@ -498,10 +510,13 @@ public class Servidor implements Runnable {
                                 transacoes = (ArrayList<Transaction>) ob.readObject();
                                 ob.close();
                                 for (Transaction i : transacoes) {
-                                    if (i.getSenderPublicKey() == EfetuaTransacao) {
+                                    String s=""+i.getSenderPublicKey();
+                                    String s1=""+EfetuaTransacao;
+                                    String s3=""+i.getReceiverPublicKey();
+                                    if (s.equals(s1)) {
                                         amount = amount - i.getAmount();
                                     }
-                                    if (i.getReceiverPublicKey() == EfetuaTransacao) {
+                                    if (s3.equals(s1)) {
                                         amount = amount + i.getAmount();
                                     }
                                 }
@@ -522,9 +537,9 @@ public class Servidor implements Runnable {
                         }
 
                     } else if (line.contains("Montante//") == true) {
+                        
                         ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
                         ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
-
                         transacoes = (ArrayList<Transaction>) ob.readObject();
                         ob.close();
                         Session ro = new Session();
@@ -538,24 +553,30 @@ public class Servidor implements Runnable {
                         for (int i = 0; i < transacoes.size(); i++) {
                             System.out.println(transacoes.get(i));
                         }*/
-                        ArrayList<Transaction> tran = new ArrayList<Transaction>();
+                        String toReturn ="";
+                       // ArrayList<Transaction> tran = new ArrayList<Transaction>();
                         for (int i = 0; i < transacoes.size(); i++) {
                             String s = "" + transacoes.get(i).getReceiverPublicKey();
                             String s1 = "" + ro.getPk();
                             if (s.equals(s1)) {
-                                tran.add(transacoes.get(i));
+                                //tran.add(transacoes.get(i));
+                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: "+transacoes.get(i).getSenderPublicKey()+"\nReceiver: "+transacoes.get(i).getReceiverPublicKey()+"\nAmount: +"+transacoes.get(i).getAmount()+"\n\n";
                                 total = total + transacoes.get(i).getAmount();
                             }
                             String s2 = "" + transacoes.get(i).getSenderPublicKey();
                             if (s2.equals(s1)) {
-                                tran.add(transacoes.get(i));
+                                //tran.add(transacoes.get(i));
+                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: "+transacoes.get(i).getSenderPublicKey()+"\nReceiver: "+transacoes.get(i).getReceiverPublicKey()+"\nAmount: -"+transacoes.get(i).getAmount()+"\n\n";
                                 total = total - transacoes.get(i).getAmount();
                             }
                         }
 
-                        printWriter.println("Montante//" + total);
+                        String returnValue2 = toReturn.replaceAll("(\\r|\\n)", ".|");
+                        printWriter.println("Montante//" + total + "//"+returnValue2);
                         printWriter.flush();
-                        toServer.writeObject(tran);
+                        System.out.println("ola");
+                        //toServer.writeObject(tran);
+                        System.out.println("xau");
                     }
 
                     if (line.trim().equals("007")) {
@@ -584,48 +605,48 @@ public class Servidor implements Runnable {
         }
     }
 
-    static class ServerThreadEnvia implements Runnable {
-
-        private SSLSocket sslSocket = null;
-
-        ServerThreadEnvia(SSLSocket sslSocket) {
-            this.sslSocket = sslSocket;
-        }
-
-        public void run() {
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-
-            try {
-                // Start handshake
-                sslSocket.startHandshake();
-
-                // Get session after the connection is established
-                SSLSession sslSession = sslSocket.getSession();
-
-                // Start handling application content
-                InputStream inputStream = sslSocket.getInputStream();
-                OutputStream outputStream = sslSocket.getOutputStream();
-
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
-
-                while (true) {
-//exemoplio
-                    //z if (estado == false) {
-                    //  printWriter.println("./.");
-                    // printWriter.flush();
-                    // }
-                    /* printWriter.println("ola eu sou o server envia particular");
-                    printWriter.flush();
-                    sleep(60000);*/
-                }
-
-            } catch (Exception ex) {
-                System.out.println("foi neste que rebentou 4");
-                ex.printStackTrace();
-            }
-        }
-    }
+//    static class ServerThreadEnvia implements Runnable {
+//
+//        private SSLSocket sslSocket = null;
+//
+//        ServerThreadEnvia(SSLSocket sslSocket) {
+//            this.sslSocket = sslSocket;
+//        }
+//
+//        public void run() {
+//            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+//
+//            try {
+//                // Start handshake
+//                sslSocket.startHandshake();
+//
+//                // Get session after the connection is established
+//                SSLSession sslSession = sslSocket.getSession();
+//
+//                // Start handling application content
+//                InputStream inputStream = sslSocket.getInputStream();
+//                OutputStream outputStream = sslSocket.getOutputStream();
+//
+//                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+//                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream));
+//
+//                while (true) {
+////exemoplio
+//                    //z if (estado == false) {
+//                    //  printWriter.println("./.");
+//                    // printWriter.flush();
+//                    // }
+//                    /* printWriter.println("ola eu sou o server envia particular");
+//                    printWriter.flush();
+//                    sleep(60000);*/
+//                }
+//
+//            } catch (Exception ex) {
+//                System.out.println("foi neste que rebentou 4");
+//                ex.printStackTrace();
+//            }
+//        }
+//    }
 
     static class ServerThreadEnviaAll implements Runnable {
 

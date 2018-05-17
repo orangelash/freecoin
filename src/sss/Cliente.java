@@ -205,24 +205,27 @@ public class Cliente {
                         String path = Paths.get("").toAbsolutePath().toString();
                         KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
                         byte[] sign = StringUtil.applyECDSASig(clienteKeys.getPrivate(), server[1]);
+                        System.out.println("envia men");
                         toServer.writeObject(sign);
-
+                        System.out.println("ja ");
                         System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
                     } else if (server[0].equals("Montante")) {
-                        String path = Paths.get("").toAbsolutePath().toString();
-                        KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
-                        ArrayList<Transaction>tran=(ArrayList<Transaction>) fromClient.readObject();
-                        for(int i=0;i<tran.size();i++)
-                        {
-                            String s=""+tran.get(i).getSenderPublicKey();
-                            String s1=""+clienteKeys.getPublic();
-                            if(s.equals(s1))
-                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: -"+tran.get(i).getAmount());
-                            else
-                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: +"+tran.get(i).getAmount());
-                        }
+                       // String path = Paths.get("").toAbsolutePath().toString();
+                       // KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
+//                        ArrayList<Transaction>tran=(ArrayList<Transaction>) fromClient.readObject();
+//                        for(int i=0;i<tran.size();i++)
+//                        {
+//                            String s=""+tran.get(i).getSenderPublicKey();
+//                            String s1=""+clienteKeys.getPublic();
+//                            if(s.equals(s1))
+//                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: -"+tran.get(i).getAmount());
+//                            else
+//                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: +"+tran.get(i).getAmount());
+//                        }
+                        String aux = server[2].replace(".|", "\n").replace("\n\n","\n");
+                        System.out.println(""+aux);
                         System.out.println("O seu saldo é: " + server[1]);
                     }
                 }
@@ -339,8 +342,13 @@ public class Cliente {
                             if (count >= bits && flag == 0) {
                                 String hashsolved = previousHash;
                                 System.out.println(hashsolved);
-                                printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
+                                String enviar="desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress();
+                                AESEncryption e=new AESEncryption();
+                                enviar=e.encyrpt(enviar,s.getChaveA());
+                                printWriter.println(enviar);
                                 printWriter.flush();
+                               /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
+                                printWriter.flush();*/
                             }
                             //queue.put(hashsolved);
                         }
@@ -396,15 +404,7 @@ public class Cliente {
 
                 int opc = 0;
                 do {
-                    String value = "";
-                    if (!queue.isEmpty()) {
-                        while (!queue.isEmpty()) {
-                            value = queue.take();
-                            printWriter.println("desafio//" + value + "//" + sslSocket.getLocalAddress());
-                            printWriter.flush();
-
-                        }
-                    }
+                  
 
                     System.out.println("-----BEM-VINDO AO FR€€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
                     opc = Ler.umInt();
@@ -486,7 +486,13 @@ public class Cliente {
 
                             RandomString desafio = new RandomString(aux);
                             String desafioEnviado = desafio.nextString();
-                            printWriter.println("authDesafio//" + desafioEnviado);
+                            
+                            KeyPair ephemeralKeys = keyUtils.generateKeyPairPrime192();
+                            byte[] publicKey = ephemeralKeys.getPublic().getEncoded();
+                            String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);    
+                            System.out.println(""+ephemeralKeys.toString());
+                            
+                            printWriter.println("authDesafio//" + desafioEnviado+"//"+encodedPublicKey);
                             printWriter.flush();
                             //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
                             sleep(1000);
@@ -506,7 +512,7 @@ public class Cliente {
                             // 3 - Gerar chaves de sessão
                             if (continua == true) {
                                 new ClientThread(sslSocket, queue).start();
-                                byte[] sessionKey = keyUtils.doECDH(clienteKeys.getPrivate(), server);
+                                byte[] sessionKey = keyUtils.doECDH(ephemeralKeys.getPrivate(), server);
                                 System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
                                 byte[] sessionKeyA = new byte[sessionKey.length + 1];
                                 byte[] sessionKeyB = new byte[sessionKey.length + 1];
@@ -542,6 +548,8 @@ public class Cliente {
                                     opc2 = Ler.umInt();
                                     switch (opc2) {
                                         case 1: {
+                                           
+                                            
                                             printWriter.println("transacao//.");
                                             printWriter.flush();
                                             PublicKey pubAlice = null;
@@ -559,8 +567,18 @@ public class Cliente {
                                             }
 
                                             System.out.println("Insira o valor a transferir");
-                                            float valorEnviar = Ler.umFloat();
-
+                                            boolean flag=true;
+                                            float valorEnviar=(float) -1.0;
+                                            while(flag!=false){
+                                                
+                                                valorEnviar = Ler.umFloat();
+                                                if(valorEnviar>=0.0){
+                                                    flag=false;
+                                                }
+                                                else{
+                                                    System.out.println("Insira um valor positivo");
+                                                }
+                                            }
                                             PublicKey destinatario = null;
                                             do {
                                                 System.out.println("Insira o caminho da chave publica do destinatário");
@@ -581,7 +599,7 @@ public class Cliente {
                                             break;
                                         }
                                         case 2:
-                                            printWriter.println("Montante//");
+                                            printWriter.println("Montante//.");
                                             printWriter.flush();
                                             break;
 
@@ -604,12 +622,7 @@ public class Cliente {
                         default:
                             System.out.println("Opção inválida, tente novamente!\n");
                     }
-                    if (!queue.isEmpty()) {
-                        while (!queue.isEmpty()) {
-                            value = queue.take();
-                            System.out.println(value);
-                        }
-                    }
+                   
 
                 } while (opc != 0);
 
