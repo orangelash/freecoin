@@ -199,13 +199,35 @@ public class Servidor implements Runnable {
                     System.out.println(line);
                     String[] recebido = line.split("//");
                     if (recebido[0].equals("desafio")) {
+                        String sss = "";
+                        
+                        for (int i = 1; i < recebido.length; i++)
+                            sss = sss + recebido[i];
+                        
+                        Session r = new Session();
+                                for (int i = 0; i < sess.size(); i++) {
+                                    if (sess.get(i).getSsl() == sslSocket) {
+                                        r = sess.get(i);
+                                    }
+                                }
+                        //import org.apache.commons.codec.binary.Base64;
+                        System.out.println("ENCRIPTADO: "+recebido[1]);
+                        AESEncryption e = new AESEncryption();
+                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(recebido[2]);
+                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(recebido[3]);
+                        System.out.println("recebi o salt: "+recebido[2]+"revebi o iv: "+recebido[3]+" recebi o tamanho do iv: "+recebido[3].length()+" a chave a usar: "+r.getChaveA()+"cripto: "+recebido[1]);
+           
+                        String texto = e.decrypt(recebido[1], r.getChaveA(),salt,iv);
+                        String [] part=texto.split("//");
+                        System.out.println(""+texto);
+                        
                         MessageDigest digest;
                         try {
                             digest = MessageDigest.getInstance("SHA-256");
-                            byte[] hash = digest.digest(recebido[1].getBytes(StandardCharsets.UTF_8));
+                            byte[] hash = digest.digest(part[0].getBytes(StandardCharsets.UTF_8));
                             String hex = DatatypeConverter.printHexBinary(hash);
                             String desafio = hex;
-                            String desafioSolved = recebido[4];
+                            String desafioSolved = part[3];
 
                             boolean res = verify(desafioSolved, desafio, bits);
                             if (res == true && desafioslista.contains(desafio)) {
@@ -219,10 +241,10 @@ public class Servidor implements Runnable {
                                 flag2 = 0;
                                 clientsRes.add(sslSocket);
                                 //AQUI FICA A PARTE DE DAR 1 FREECOIN AO UTILIZADOR
-                                Session r = new Session();
+                                Session r2 = new Session();
                                 for (int i = 0; i < sess.size(); i++) {
                                     if (sess.get(i).getSsl() == sslSocket) {
-                                        r = sess.get(i);
+                                        r2 = sess.get(i);
                                     }
                                 }
 
@@ -447,7 +469,7 @@ public class Servidor implements Runnable {
                                 sessionKeyD[sessionKeyA.length - 1] = 68;
 
                                 MessageDigest digest;
-                                digest = MessageDigest.getInstance("SHA-256");
+                                digest = MessageDigest.getInstance("SHA-1");
                                 byte[] hash = digest.digest(sessionKeyA);
                                 String chaveA = DatatypeConverter.printHexBinary(hash);
 

@@ -340,12 +340,27 @@ public class Cliente {
 
                             }
                             if (count >= bits && flag == 0) {
+                                /* COM MAC
+                                enviar=e.encyrpt(enviar,s.getChaveA());
+                                String toCalcMac = "desafio//" + desafio + "//" +enviar;
+                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.chaveB));
+                                printWriter.println(toCalcMac+"//"+MAC);
+                                */
+                                
                                 String hashsolved = previousHash;
                                 System.out.println(hashsolved);
-                                String enviar="desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress();
+                                String enviar=desafio+"//"+bitss + "//resolvido//" + hashsolved + "//" + sslSocket.getLocalAddress();
                                 AESEncryption e=new AESEncryption();
+                                System.out.println("A: ------------: "+s.getChaveA());
+                                
                                 enviar=e.encyrpt(enviar,s.getChaveA());
-                                printWriter.println(enviar);
+                                 byte[] salt = new org.apache.commons.codec.binary.Base64().decode(e.getSalta());
+                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
+                                System.out.println(e.decrypt(enviar, s.getChaveA(),salt, iv));
+                                // byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
+                                //System.out.println("é igual? "+iv);
+                                 System.out.println("envio o salt: "+e.getSalta()+"envio o iv: "+e.getIv()+" enviar o tamanho do iv: "+e.getIv().length()+" a chave a usar: "+s.getChaveA()+"cripto: "+enviar);
+                                printWriter.println("desafio//" +enviar+"//"+e.getSalta()+"//"+e.getIv());
                                 printWriter.flush();
                                /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
                                 printWriter.flush();*/
@@ -528,10 +543,10 @@ public class Cliente {
                                 sessionKeyD[sessionKeyA.length - 1] = 68;
 
                                 MessageDigest digest;
-                                digest = MessageDigest.getInstance("SHA-256");
+                                digest = MessageDigest.getInstance("SHA-1");
                                 byte[] hash = digest.digest(sessionKeyA);
                                 String chaveA = DatatypeConverter.printHexBinary(hash);
-
+                                
                                 hash = digest.digest(sessionKeyB);
                                 String chaveB = DatatypeConverter.printHexBinary(hash);
 

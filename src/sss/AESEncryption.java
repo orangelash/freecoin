@@ -1,6 +1,7 @@
 package sss;
 
-
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 import javax.crypto.BadPaddingException;
@@ -13,13 +14,14 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
+import static sss.StringUtil.hexStringToByteArray;
 
 public class AESEncryption {
 
-   // private static final String TOKEN = "passwd";
+    // private static final String TOKEN = "passwd";
     private String salt;
     private int pwdIterations = 65536;
-    private int keySize = 256;
+    private int keySize = 128;
     private byte[] ivBytes;
     private String keyAlgorithm = "AES";
     private String encryptAlgorithm = "AES/CBC/PKCS5Padding";
@@ -34,7 +36,16 @@ public class AESEncryption {
         byte bytes[] = new byte[20];
         random.nextBytes(bytes);
         String text = new String(bytes);
-        return text;
+        return new Base64().encodeAsString(bytes);
+    }
+
+    public String getSalta() {
+
+        return salt;
+    }
+
+    public String getIv() {
+        return new Base64().encodeAsString(ivBytes);
     }
 
     /**
@@ -45,21 +56,20 @@ public class AESEncryption {
      */
     public String encyrpt(String plainText, String secKey) throws Exception {
         //generate key
-        byte[] saltBytes = salt.getBytes("UTF-8");
-
-        SecretKeyFactory skf = SecretKeyFactory.getInstance(this.secretKeyFactoryAlgorithm);
-        PBEKeySpec spec = new PBEKeySpec(secKey.toCharArray(), saltBytes, this.pwdIterations, this.keySize);
-        SecretKey secretKey = skf.generateSecret(spec);
-        SecretKeySpec key = new SecretKeySpec(secretKey.getEncoded(), keyAlgorithm);
-
+        byte[] saltBytes = salt.getBytes();
+         byte[] bytes=hexStringToByteArray(secKey);
+       SecretKey originalKey = new SecretKeySpec(bytes, 0, 16, "AES");
         //AES initialization
+        System.out.println(bytes.length);
         Cipher cipher = Cipher.getInstance(encryptAlgorithm);
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+        cipher.init(Cipher.ENCRYPT_MODE, originalKey);
 
         //generate IV
-        this.ivBytes = cipher.getParameters().getParameterSpec(IvParameterSpec.class).getIV();
-        byte[] encryptedText = cipher.doFinal(plainText.getBytes("UTF-8"));
-        return new Base64().encodeAsString(encryptedText);
+        ivBytes = cipher.getParameters().getParameterSpec(IvParameterSpec.class).getIV();
+        byte[] encryptedText = cipher.doFinal(plainText.getBytes());
+        String s = new Base64().encodeAsString(encryptedText);
+
+        return s;
     }
 
     /**
@@ -68,31 +78,22 @@ public class AESEncryption {
      * @return decrypted text
      * @throws Exception
      */
-    public String decrypt(String encryptText, String secKey) throws Exception {
-        byte[] saltBytes = salt.getBytes("UTF-8");
+    public String decrypt(String encryptText, String secKey, byte[] salta, byte[] iv) throws Exception {
+        byte[] saltBytes = salta;
         byte[] encryptTextBytes = new Base64().decode(encryptText);
 
-        SecretKeyFactory skf = SecretKeyFactory.getInstance(this.secretKeyFactoryAlgorithm);
-        PBEKeySpec spec = new PBEKeySpec(secKey.toCharArray(), saltBytes, this.pwdIterations, this.keySize);
-        SecretKey secretKey = skf.generateSecret(spec);
-        SecretKeySpec key = new SecretKeySpec(secretKey.getEncoded(), keyAlgorithm);
-
         //decrypt the message
+        byte[] bytes=hexStringToByteArray(secKey);
+        //byte[] bytes = new BigInteger("7F" + secKey, 16).toByteArray();
+        SecretKey originalKey = new SecretKeySpec(bytes, 0, 16, "AES");
         Cipher cipher = Cipher.getInstance(encryptAlgorithm);
-        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(ivBytes));
+        System.out.println(iv.toString());
+        cipher.init(Cipher.DECRYPT_MODE, originalKey, new IvParameterSpec(iv));
 
-        byte[] decyrptTextBytes = null;
-        try {
-            decyrptTextBytes = cipher.doFinal(encryptTextBytes);
-        } catch (IllegalBlockSizeException e) {
-            // TODO: handle exception
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        }
+        byte[] decyrptTextBytes = cipher.doFinal(encryptTextBytes);
+
         String text = new String(decyrptTextBytes);
         return text;
     }
 
-    
 }

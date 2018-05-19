@@ -5,11 +5,13 @@
  */
 package sss;
 
-
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
 public class StringUtil {
 
@@ -62,6 +64,18 @@ public class StringUtil {
         return output;
     }
 
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
+ 
+
     //Verifies a String signature 
     public static boolean verifyECDSASig(PublicKey publicKey, String data, byte[] signature) {
         try {
@@ -82,6 +96,21 @@ public class StringUtil {
 
     public static String getStringFromKey(Key key) {
         return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    public static byte[] generateHMac(String secretKey, String data) {
+
+        SecretKeySpec signingKey = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");/* e.g. "HmacSHA256" */
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(signingKey);
+
+            return mac.doFinal(data.getBytes());
+        } catch (InvalidKeyException e) {
+            throw new IllegalArgumentException("invalid secret key provided (key not printed for security reasons!)");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("the system doesn't support algorithm " + "HmacSHA256", e);
+        }
     }
 
 }
