@@ -7,6 +7,7 @@ package sss;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyFactory;
@@ -22,7 +23,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.KeyAgreement;
-
 
 public class keyUtils {
 
@@ -71,36 +71,42 @@ public class keyUtils {
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
     }
-    
+
     public static KeyPair LoadKeyPair(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
         // Read Public Key.
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-        File filePublicKey = new File(path + "/public.key");
-        FileInputStream fis = new FileInputStream(path + "/public.key");
-        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-        fis.read(encodedPublicKey);
-        fis.close();
+        PublicKey publicKey = null;
+        PrivateKey privateKey = null;
+        try {
+            File filePublicKey = new File(path + "/public.key");
+            FileInputStream fis = new FileInputStream(path + "/public.key");
+            byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
+            fis.read(encodedPublicKey);
+            fis.close();
 
-        // Read Private Key.
-        File filePrivateKey = new File(path + "/private.key");
-        fis = new FileInputStream(path + "/private.key");
-        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-        fis.read(encodedPrivateKey);
-        fis.close();
+            // Read Private Key.
+            File filePrivateKey = new File(path + "/private.key");
+            fis = new FileInputStream(path + "/private.key");
+            byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+            fis.read(encodedPrivateKey);
+            fis.close();
 
-        // Generate KeyPair.
-        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
-                encodedPublicKey);
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            // Generate KeyPair.
+            KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
+                    encodedPublicKey);
+            publicKey = keyFactory.generatePublic(publicKeySpec);
 
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
-                encodedPrivateKey);
-        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-
+            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+                    encodedPrivateKey);
+            privateKey = keyFactory.generatePrivate(privateKeySpec);
+        } catch (FileNotFoundException e) {
+            System.out.println("Não tem chave publica disponível");
+        }
         return new KeyPair(publicKey, privateKey);
+
     }
 
     public static KeyPair LoadKeyPairServer(String path, String algorithm)
@@ -148,7 +154,7 @@ public class keyUtils {
 
         return publicKey;
     }
-    
+
     public static PublicKey LoadAlicePublicKey(String path, String algorithm) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         File filePublicKey = new File(path);

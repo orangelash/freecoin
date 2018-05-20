@@ -61,7 +61,7 @@ public class Cliente {
     private static String desafio = "";
     private static String bitss = "";
     private static int leu = 0;
-    private String host = "192.168.137.1";
+    private String host = "127.0.0.1";
     private int port = 9999;
     private static X509Certificate certi = null;
     static Session s;
@@ -201,8 +201,18 @@ public class Cliente {
                         AESEncryption e = new AESEncryption();
                         byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
                         byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
+
+                        
                         String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
                         System.out.println("" + texto);
+                        
+                        //TODO: VER ISTO!                        
+                        String toCalcMac = "desafiowin//" + server[1] + "//" + server[2] + "//" + server[3];
+                        String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
+                        
+                        System.out.println("recebido:"+server[4]);
+                        System.out.println("calculado:"+NovoMAC);
+                        System.out.println(toCalcMac.equalsIgnoreCase(NovoMAC));
 
                     } else if (server[0].equals("cadeia")) {
                         System.out.println("cadeia= " + server[1]);
@@ -363,13 +373,7 @@ public class Cliente {
                                 }
 
                             }
-                            if (count >= bits && flag == 0) {
-                                /* COM MAC
-                                enviar=e.encyrpt(enviar,s.getChaveA());
-                                String toCalcMac = "desafio//" + desafio + "//" +enviar;
-                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.chaveB));
-                                printWriter.println(toCalcMac+"//"+MAC);
-                                 */
+                            if (count >= bits && flag == 0) {                          
 
                                 String hashsolved = previousHash;
                                 System.out.println(hashsolved);
@@ -384,7 +388,11 @@ public class Cliente {
                                 // byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
                                 //System.out.println("é igual? "+iv);
                                 System.out.println("envio o salt: " + e.getSalta() + "envio o iv: " + e.getIv() + " enviar o tamanho do iv: " + e.getIv().length() + " a chave a usar: " + s.getChaveA() + "cripto: " + enviar);
-                                printWriter.println("desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv());
+                                
+                                String toCalcMac = "desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv();
+                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveB()));
+                                
+                                printWriter.println("desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv() + "//" + MAC);
                                 printWriter.flush();
                                 /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
                                 printWriter.flush();*/
@@ -509,6 +517,8 @@ public class Cliente {
                             PublicKey server = keyUtils.LoadServerPublicKey(path, "ECDSA");
 
                             // 1 - Enviar public key ao servidor, ele verifica se está registado
+                             KeyPair ephemeralKeys = null;
+                            try {
                             byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
                             String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
 
@@ -526,7 +536,7 @@ public class Cliente {
                             RandomString desafio = new RandomString(aux);
                             String desafioEnviado = desafio.nextString();
 
-                            KeyPair ephemeralKeys = keyUtils.generateKeyPairPrime192();
+                             ephemeralKeys = keyUtils.generateKeyPairPrime192();
                             byte[] publicKey = ephemeralKeys.getPublic().getEncoded();
                             String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);
                             System.out.println("" + ephemeralKeys.toString());
@@ -545,6 +555,8 @@ public class Cliente {
                                 }
                             } catch (Exception e) {
                                 System.out.println("Desafio incorreto, servidor não autenticado.");
+                                continua = false;
+                            }} catch (NullPointerException e) {
                                 continua = false;
                             }
                             //  2.2) ver se o desafio que o servidor assinou está correto com o certificado dele, se sim, continuar, caso contrário aborta

@@ -236,7 +236,9 @@ public class Servidor implements Runnable {
                                     }
                                 }
                                 envia = es.encyrpt(envia, ra.getChaveB());
-                                printWriter.println("desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv());
+                                String toCalcMac = "desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv();
+                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, ra.getChaveD()));
+                                printWriter.println("desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv() + "//" + MAC);
                                 printWriter.flush();
 
                                 /*  printWriter.println("desafiowin//Desafio resolvido, ganhou uma freecoin");
@@ -612,7 +614,9 @@ public class Servidor implements Runnable {
                         
                         AESEncryption es = new AESEncryption();
                         envia = es.encyrpt(envia, ro.getChaveB());
-                        printWriter.println("Montante/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv());
+                        String toCalcMac = "Montante/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv();
+                        String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, ro.getChaveD()));
+                        printWriter.println("Montante/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv() + "//" + MAC);
                         printWriter.flush();
 
                         
@@ -762,7 +766,11 @@ public class Servidor implements Runnable {
                                     }
                                 }
                                 envia = es.encyrpt(envia, ra.getChaveB());
-                                printWriter.println("desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv());
+                                
+                                String toCalcMac = "desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv();
+                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, ra.getChaveD()));
+                                
+                                printWriter.println("desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv() + "//" + MAC);
                                 printWriter.flush();
 
                                 System.out.println("os meus bits estao em : " + bits);
