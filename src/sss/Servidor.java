@@ -147,15 +147,14 @@ public class Servidor implements Runnable {
 //                oos.close();
 //                fout.close();
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
-                
+
                 ServerThread myRunnable3 = new ServerThread(sslSocket);
                 Thread t3 = new Thread(myRunnable3);
                 t3.start();
 
                 //ServerThreadEnvia myRunnable1 = new ServerThreadEnvia(sslSocket);
                 //Thread t1 = new Thread(myRunnable1);
-              //  t1.start();
-
+                //  t1.start();
             }
         } catch (Exception ex) {
             System.out.println("foi neste que rebentou 2");
@@ -199,28 +198,24 @@ public class Servidor implements Runnable {
                     System.out.println(line);
                     String[] recebido = line.split("//");
                     if (recebido[0].equals("desafio")) {
-                        String sss = "";
-                        
-                        for (int i = 1; i < recebido.length; i++)
-                            sss = sss + recebido[i];
-                        
+
                         Session r = new Session();
-                                for (int i = 0; i < sess.size(); i++) {
-                                    if (sess.get(i).getSsl() == sslSocket) {
-                                        r = sess.get(i);
-                                    }
-                                }
+                        for (int i = 0; i < sess.size(); i++) {
+                            if (sess.get(i).getSsl() == sslSocket) {
+                                r = sess.get(i);
+                            }
+                        }
                         //import org.apache.commons.codec.binary.Base64;
-                        System.out.println("ENCRIPTADO: "+recebido[1]);
+                        System.out.println("ENCRIPTADO: " + recebido[1]);
                         AESEncryption e = new AESEncryption();
                         byte[] salt = new org.apache.commons.codec.binary.Base64().decode(recebido[2]);
                         byte[] iv = new org.apache.commons.codec.binary.Base64().decode(recebido[3]);
-                        System.out.println("recebi o salt: "+recebido[2]+"revebi o iv: "+recebido[3]+" recebi o tamanho do iv: "+recebido[3].length()+" a chave a usar: "+r.getChaveA()+"cripto: "+recebido[1]);
-           
-                        String texto = e.decrypt(recebido[1], r.getChaveA(),salt,iv);
-                        String [] part=texto.split("//");
-                        System.out.println(""+texto);
-                        
+                        System.out.println("recebi o salt: " + recebido[2] + "revebi o iv: " + recebido[3] + " recebi o tamanho do iv: " + recebido[3].length() + " a chave a usar: " + r.getChaveA() + "cripto: " + recebido[1]);
+
+                        String texto = e.decrypt(recebido[1], r.getChaveA(), salt, iv);
+                        String[] part = texto.split("//");
+                        System.out.println("" + texto);
+
                         MessageDigest digest;
                         try {
                             digest = MessageDigest.getInstance("SHA-256");
@@ -231,8 +226,21 @@ public class Servidor implements Runnable {
 
                             boolean res = verify(desafioSolved, desafio, bits);
                             if (res == true && desafioslista.contains(desafio)) {
-                                printWriter.println("desafiowin//Desafio resolvido, ganhou uma freecoin");
+
+                                String envia = "Desafio resolvido, ganhou uma freecoin";
+                                AESEncryption es = new AESEncryption();
+                                Session ra = new Session();
+                                for (int i = 0; i < sess.size(); i++) {
+                                    if (sess.get(i).getSsl() == sslSocket) {
+                                        ra = sess.get(i);
+                                    }
+                                }
+                                envia = es.encyrpt(envia, ra.getChaveB());
+                                printWriter.println("desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv());
                                 printWriter.flush();
+
+                                /*  printWriter.println("desafiowin//Desafio resolvido, ganhou uma freecoin");
+                                printWriter.flush();*/
                                 estado = true;
                                 quemresolveu = sslSocket.getInetAddress().getHostAddress();
 
@@ -398,7 +406,7 @@ public class Servidor implements Runnable {
 //                        }
                     } else if (line.contains("authDesafio//")) {
                         /*--------------------------------------*/
-                        
+
                         String[] auxKey = line.split("//");
                         byte[] publicKeyX = Base64.getDecoder().decode(auxKey[2]);
                         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
@@ -407,15 +415,15 @@ public class Servidor implements Runnable {
                         X509EncodedKeySpec ks = new X509EncodedKeySpec(publicKeyX);
                         KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
                         PublicKey efemeralPK = kf.generatePublic(ks);
-                        
-                        
+
                         SecureRandom random = new SecureRandom();
                         int max = 500;
                         int min = 10;
-                        
+
                         int aux = random.nextInt(max - min + 1) + min;
                         RandomString desafiotoClient = new RandomString(aux);
                         String desafioEnviado = desafiotoClient.nextString();
+
                         printWriter.println("respostaDesafio//" + desafioEnviado);
                         printWriter.flush();
 
@@ -519,10 +527,10 @@ public class Servidor implements Runnable {
                         Transaction transacao = (Transaction) fromClient.readObject(); //ISTO DA ERRO
 
                         try {
-                           
+
                             if (StringUtil.verifyECDSASig(transacao.senderPublicKey, transacao.getDataSignature(), transacao.getSignatureSender()) == true) {
                                 PublicKey EfetuaTransacao = transacao.senderPublicKey;
-                              
+
                                 Float ValorTroca = transacao.getAmount();
                                 KeyPair serv = keyUtils.LoadKeyPairServer(path, "ECDSA");
 
@@ -532,9 +540,9 @@ public class Servidor implements Runnable {
                                 transacoes = (ArrayList<Transaction>) ob.readObject();
                                 ob.close();
                                 for (Transaction i : transacoes) {
-                                    String s=""+i.getSenderPublicKey();
-                                    String s1=""+EfetuaTransacao;
-                                    String s3=""+i.getReceiverPublicKey();
+                                    String s = "" + i.getSenderPublicKey();
+                                    String s1 = "" + EfetuaTransacao;
+                                    String s3 = "" + i.getReceiverPublicKey();
                                     if (s.equals(s1)) {
                                         amount = amount - i.getAmount();
                                     }
@@ -559,7 +567,7 @@ public class Servidor implements Runnable {
                         }
 
                     } else if (line.contains("Montante//") == true) {
-                        
+
                         ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
                         ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
                         transacoes = (ArrayList<Transaction>) ob.readObject();
@@ -575,27 +583,45 @@ public class Servidor implements Runnable {
                         for (int i = 0; i < transacoes.size(); i++) {
                             System.out.println(transacoes.get(i));
                         }*/
-                        String toReturn ="";
-                       // ArrayList<Transaction> tran = new ArrayList<Transaction>();
+                        String toReturn = "";
+                        // ArrayList<Transaction> tran = new ArrayList<Transaction>();
                         for (int i = 0; i < transacoes.size(); i++) {
                             String s = "" + transacoes.get(i).getReceiverPublicKey();
                             String s1 = "" + ro.getPk();
                             if (s.equals(s1)) {
                                 //tran.add(transacoes.get(i));
-                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: "+transacoes.get(i).getSenderPublicKey()+"\nReceiver: "+transacoes.get(i).getReceiverPublicKey()+"\nAmount: +"+transacoes.get(i).getAmount()+"\n\n";
+                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: " + transacoes.get(i).getSenderPublicKey() + "\nReceiver: " + transacoes.get(i).getReceiverPublicKey() + "\nAmount: +" + transacoes.get(i).getAmount() + "\n\n";
                                 total = total + transacoes.get(i).getAmount();
                             }
                             String s2 = "" + transacoes.get(i).getSenderPublicKey();
                             if (s2.equals(s1)) {
                                 //tran.add(transacoes.get(i));
-                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: "+transacoes.get(i).getSenderPublicKey()+"\nReceiver: "+transacoes.get(i).getReceiverPublicKey()+"\nAmount: -"+transacoes.get(i).getAmount()+"\n\n";
+                                toReturn = toReturn + transacoes.get(i).getSenderPublicKey() + "Sender: " + transacoes.get(i).getSenderPublicKey() + "\nReceiver: " + transacoes.get(i).getReceiverPublicKey() + "\nAmount: -" + transacoes.get(i).getAmount() + "\n\n";
                                 total = total - transacoes.get(i).getAmount();
                             }
                         }
 
                         String returnValue2 = toReturn.replaceAll("(\\r|\\n)", ".|");
-                        printWriter.println("Montante//" + total + "//"+returnValue2);
+
+                        
+                        
+                        
+                        String envia = total + "/////" + returnValue2;
+                        
+                        
+                        
+                        AESEncryption es = new AESEncryption();
+                        envia = es.encyrpt(envia, ro.getChaveB());
+                        printWriter.println("Montante/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv());
                         printWriter.flush();
+
+                        
+                        
+                        
+                        
+                        
+                      /*  printWriter.println("Montante//" + total + "//" + returnValue2);
+                        printWriter.flush();*/
                         System.out.println("ola");
                         //toServer.writeObject(tran);
                         System.out.println("xau");
@@ -669,7 +695,6 @@ public class Servidor implements Runnable {
 //            }
 //        }
 //    }
-
     static class ServerThreadEnviaAll implements Runnable {
 
         public ServerThreadEnviaAll() {
@@ -728,9 +753,21 @@ public class Servidor implements Runnable {
 
                             if (flag2 == 0) {
 
-                                System.out.println("os meus bits estao em : " + bits);
-                                printWriter.println("desafio//" + k + "//" + bits);
+                                String envia = k + "//" + bits;
+                                AESEncryption es = new AESEncryption();
+                                Session ra = new Session();
+                                for (int j = 0; j < sess.size(); j++) {
+                                    if (sess.get(j).getSsl() == clients.get(i)) {
+                                        ra = sess.get(j);
+                                    }
+                                }
+                                envia = es.encyrpt(envia, ra.getChaveB());
+                                printWriter.println("desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv());
                                 printWriter.flush();
+
+                                System.out.println("os meus bits estao em : " + bits);
+                                /* printWriter.println("desafio//" + k + "//" + bits);*****
+                                printWriter.flush();*/
                                 startTime = System.currentTimeMillis();
                                 if (clients.size() - 1 == i) {
                                     flag2 = 1;

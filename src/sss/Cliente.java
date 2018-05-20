@@ -182,12 +182,28 @@ public class Cliente {
                     String[] server = line.split("//");
                     //System.out.println("3");
                     if (server[0].equals("desafio")) {
-                        desafio = server[1];
-                        bitss = server[2];
+                        
+                        
+                        AESEncryption e = new AESEncryption();
+                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
+                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
+                        String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
+                        String[] part=texto.split("//");
+                        
+                        
+                        desafio = part[0];
+                        bitss = part[1];
+                        System.out.println(bitss);
                         leu = 1;
 
                     } else if (server[0].equals("desafiowin")) {
-                        System.out.println(server[1]);
+
+                        AESEncryption e = new AESEncryption();
+                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
+                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
+                        String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
+                        System.out.println("" + texto);
+
                     } else if (server[0].equals("cadeia")) {
                         System.out.println("cadeia= " + server[1]);
                         /*byte[] byteArr = server[1].getBytes();
@@ -211,9 +227,9 @@ public class Cliente {
                         System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
                         System.out.println("" + Arrays.toString(respostaDesafio));
-                    } else if (server[0].equals("Montante")) {
-                       // String path = Paths.get("").toAbsolutePath().toString();
-                       // KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
+                    } else if (line.contains("Montante")) {
+                        // String path = Paths.get("").toAbsolutePath().toString();
+                        // KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
 //                        ArrayList<Transaction>tran=(ArrayList<Transaction>) fromClient.readObject();
 //                        for(int i=0;i<tran.size();i++)
 //                        {
@@ -224,9 +240,17 @@ public class Cliente {
 //                            else
 //                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: +"+tran.get(i).getAmount());
 //                        }
-                        String aux = server[2].replace(".|", "\n").replace("\n\n","\n");
-                        System.out.println(""+aux);
-                        System.out.println("O seu saldo é: " + server[1]);
+                        String []par=line.split("/////");
+                        AESEncryption e = new AESEncryption();
+                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(par[2]);
+                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(par[3]);
+                        String texto = e.decrypt(par[1], s.getChaveB(), salt, iv);
+                        String[] part=texto.split("/////");
+                        
+
+                        String aux = part[1].replace(".|", "\n").replace("\n\n", "\n");
+                        System.out.println("" + aux);
+                        System.out.println("O seu saldo é: " + part[0]);
                     }
                 }
 
@@ -345,24 +369,24 @@ public class Cliente {
                                 String toCalcMac = "desafio//" + desafio + "//" +enviar;
                                 String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.chaveB));
                                 printWriter.println(toCalcMac+"//"+MAC);
-                                */
-                                
+                                 */
+
                                 String hashsolved = previousHash;
                                 System.out.println(hashsolved);
-                                String enviar=desafio+"//"+bitss + "//resolvido//" + hashsolved + "//" + sslSocket.getLocalAddress();
-                                AESEncryption e=new AESEncryption();
-                                System.out.println("A: ------------: "+s.getChaveA());
-                                
-                                enviar=e.encyrpt(enviar,s.getChaveA());
-                                 byte[] salt = new org.apache.commons.codec.binary.Base64().decode(e.getSalta());
-                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
-                                System.out.println(e.decrypt(enviar, s.getChaveA(),salt, iv));
+                                String enviar = desafio + "//" + bitss + "//resolvido//" + hashsolved + "//" + sslSocket.getLocalAddress();
+                                AESEncryption e = new AESEncryption();
+                                System.out.println("A: ------------: " + s.getChaveA());
+
+                                enviar = e.encyrpt(enviar, s.getChaveA());
+                                byte[] salt = new org.apache.commons.codec.binary.Base64().decode(e.getSalta());
+                                byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
+                                System.out.println(e.decrypt(enviar, s.getChaveA(), salt, iv));
                                 // byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
                                 //System.out.println("é igual? "+iv);
-                                 System.out.println("envio o salt: "+e.getSalta()+"envio o iv: "+e.getIv()+" enviar o tamanho do iv: "+e.getIv().length()+" a chave a usar: "+s.getChaveA()+"cripto: "+enviar);
-                                printWriter.println("desafio//" +enviar+"//"+e.getSalta()+"//"+e.getIv());
+                                System.out.println("envio o salt: " + e.getSalta() + "envio o iv: " + e.getIv() + " enviar o tamanho do iv: " + e.getIv().length() + " a chave a usar: " + s.getChaveA() + "cripto: " + enviar);
+                                printWriter.println("desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv());
                                 printWriter.flush();
-                               /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
+                                /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
                                 printWriter.flush();*/
                             }
                             //queue.put(hashsolved);
@@ -419,7 +443,6 @@ public class Cliente {
 
                 int opc = 0;
                 do {
-                  
 
                     System.out.println("-----BEM-VINDO AO FR€€COIN-----\n1-Registar\n2-Entrar\n0-Sair");
                     opc = Ler.umInt();
@@ -488,6 +511,7 @@ public class Cliente {
                             // 1 - Enviar public key ao servidor, ele verifica se está registado
                             byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
                             String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
+
                             printWriter.println("login//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
                             printWriter.flush();
 
@@ -501,13 +525,13 @@ public class Cliente {
 
                             RandomString desafio = new RandomString(aux);
                             String desafioEnviado = desafio.nextString();
-                            
+
                             KeyPair ephemeralKeys = keyUtils.generateKeyPairPrime192();
                             byte[] publicKey = ephemeralKeys.getPublic().getEncoded();
-                            String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);    
-                            System.out.println(""+ephemeralKeys.toString());
-                            
-                            printWriter.println("authDesafio//" + desafioEnviado+"//"+encodedPublicKey);
+                            String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);
+                            System.out.println("" + ephemeralKeys.toString());
+
+                            printWriter.println("authDesafio//" + desafioEnviado + "//" + encodedPublicKey);
                             printWriter.flush();
                             //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
                             sleep(1000);
@@ -546,7 +570,7 @@ public class Cliente {
                                 digest = MessageDigest.getInstance("SHA-1");
                                 byte[] hash = digest.digest(sessionKeyA);
                                 String chaveA = DatatypeConverter.printHexBinary(hash);
-                                
+
                                 hash = digest.digest(sessionKeyB);
                                 String chaveB = DatatypeConverter.printHexBinary(hash);
 
@@ -563,8 +587,7 @@ public class Cliente {
                                     opc2 = Ler.umInt();
                                     switch (opc2) {
                                         case 1: {
-                                           
-                                            
+
                                             printWriter.println("transacao//.");
                                             printWriter.flush();
                                             PublicKey pubAlice = null;
@@ -582,15 +605,14 @@ public class Cliente {
                                             }
 
                                             System.out.println("Insira o valor a transferir");
-                                            boolean flag=true;
-                                            float valorEnviar=(float) -1.0;
-                                            while(flag!=false){
-                                                
+                                            boolean flag = true;
+                                            float valorEnviar = (float) -1.0;
+                                            while (flag != false) {
+
                                                 valorEnviar = Ler.umFloat();
-                                                if(valorEnviar>=0.0){
-                                                    flag=false;
-                                                }
-                                                else{
+                                                if (valorEnviar >= 0.0) {
+                                                    flag = false;
+                                                } else {
                                                     System.out.println("Insira um valor positivo");
                                                 }
                                             }
@@ -637,7 +659,6 @@ public class Cliente {
                         default:
                             System.out.println("Opção inválida, tente novamente!\n");
                     }
-                   
 
                 } while (opc != 0);
 
