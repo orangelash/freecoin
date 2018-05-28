@@ -19,9 +19,9 @@ public class rand {
     public static String randomnumber() {
         SecureRandom random = new SecureRandom();
         String k = new BigInteger(400, random).toString(32);
-        if (count!=0)
+       /* if (count!=0)
             System.out.println("Novo desafio enviado");
-        count++;
+        count++;*/
         return k;
 
     }

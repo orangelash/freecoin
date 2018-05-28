@@ -61,7 +61,7 @@ public class Cliente {
     private static String desafio = "";
     private static String bitss = "";
     private static int leu = 0;
-    private String host = "127.0.0.1";
+    private String host = "192.168.137.1";
     private int port = 9999;
     private static X509Certificate certi = null;
     static Session s;

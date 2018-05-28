@@ -661,7 +661,7 @@ public class Servidor implements Runnable {
                                 printWriter.println("desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv() + "//" + MAC);
                                 printWriter.flush();
 
-                                System.out.println("os meus bits estao em : " + bits);
+                                System.out.println("Novo desafio enviado, com os bits em: " + bits);
 
                                 startTime = System.currentTimeMillis();
                                 if (clients.size() - 1 == i) {
