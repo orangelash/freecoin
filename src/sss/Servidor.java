@@ -195,7 +195,7 @@ public class Servidor implements Runnable {
                   
                     String inetAddress = sslSocket.getInetAddress().getHostName();
              
-                    String[] recebido = line.split("//");
+                    String[] recebido = line.split("/////");
                     if (recebido[0].equals("desafio")) {
                     
                         Session r = new Session();
@@ -205,7 +205,7 @@ public class Servidor implements Runnable {
                             }
                         }
                   
-                        String toCalcMaca = "desafio//" + recebido[1] + "//" + recebido[2] + "//" + recebido[3];
+                        String toCalcMaca = "desafio/////" + recebido[1] + "/////" + recebido[2] + "/////" + recebido[3];
                         String NovoMACa = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMaca, r.getChaveC()));
          
                         if (NovoMACa.equals(recebido[4]) || !NovoMACa.equals(recebido[4])) {
@@ -215,7 +215,7 @@ public class Servidor implements Runnable {
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(recebido[3]);
 
                             String texto = e.decrypt(recebido[1], r.getChaveA(), salt, iv);
-                            String[] part = texto.split("//");
+                            String[] part = texto.split("/////");
               
                             MessageDigest digest;
                             try {
@@ -237,9 +237,9 @@ public class Servidor implements Runnable {
                                         }
                                     }
                                     envia = es.encyrpt(envia, ra.getChaveB());
-                                    String toCalcMac = "desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv();
+                                    String toCalcMac = "desafiowin/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv();
                                     String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, ra.getChaveD()));
-                                    printWriter.println("desafiowin//" + envia + "//" + es.getSalta() + "//" + es.getIv() + "//" + MAC);
+                                    printWriter.println("desafiowin/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv() + "/////" + MAC);
                                     printWriter.flush();
 
                                     /*  printWriter.println("desafiowin//Desafio resolvido, ganhou uma freecoin");
@@ -298,9 +298,9 @@ public class Servidor implements Runnable {
                         System.out.println("1HMAC não confirmado!");
                     }
                     } 
-                    if (line.contains("registar//") == true) {
+                    if (line.contains("registar/////") == true) {
 
-                        String[] chavePubCliente = line.split("//");
+                        String[] chavePubCliente = line.split("/////");
                         byte[] publicKeyX = Base64.getDecoder().decode(chavePubCliente[1]);
                         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
@@ -328,18 +328,18 @@ public class Servidor implements Runnable {
                         String str = new String(cadeia);*/
 
                         //criar chave publica atraves dos bytes recebidos
-                        printWriter.println("cadeia//.");
+                        printWriter.println("cadeia/////.");
                         printWriter.flush();
 
                         //byte[] frame = certClient.getEncoded();
                         toServer.writeObject(certClient);
 
-                    } else if (line.contains("login//") == true) {
+                    } else if (line.contains("login/////") == true) {
                         clients.add(sslSocket);
                         clientsRes.add(sslSocket);
 
                         // 1 - receber chave pública do cliente
-                        String[] chavePubCliente = line.split("//");
+                        String[] chavePubCliente = line.split("/////");
 
 
                         //receber chave publica
@@ -354,10 +354,10 @@ public class Servidor implements Runnable {
                         p = new Session(sslSocket, alice);
                         sess.add(p);
 
-                    } else if (line.contains("authDesafio//")) {
+                    } else if (line.contains("authDesafio/////")) {
                         /*--------------------------------------*/
 
-                        String[] auxKey = line.split("//");
+                        String[] auxKey = line.split("/////");
                         byte[] publicKeyX = Base64.getDecoder().decode(auxKey[2]);
                         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
@@ -374,10 +374,10 @@ public class Servidor implements Runnable {
                         RandomString desafiotoClient = new RandomString(aux);
                         String desafioEnviado = desafiotoClient.nextString();
 
-                        printWriter.println("respostaDesafio//" + desafioEnviado);
+                        printWriter.println("respostaDesafio/////" + desafioEnviado);
                         printWriter.flush();
 
-                        String[] leitura = line.split("//");
+                        String[] leitura = line.split("/////");
                         String desafio = leitura[1];
                      //   System.out.println("" + desafio);
 
@@ -461,7 +461,7 @@ public class Servidor implements Runnable {
                             clientsRes.remove(sslSocket);
                         }
 
-                    } else if (line.contains("LogOut//")) {
+                    } else if (line.contains("LogOut/////")) {
                         Session ro = new Session();
                         for (int i = 0; i < sess.size(); i++) {
                             if (sess.get(i).getSsl() == sslSocket) {
@@ -471,7 +471,7 @@ public class Servidor implements Runnable {
                         sess.remove(ro);
                         clients.remove(sslSocket);
                         clientsRes.remove(sslSocket);
-                    } else if (line.contains("transacao//") == true) {
+                    } else if (line.contains("transacao/////") == true) {
                         System.out.println("-----Transação-----");
                         Transaction transacao = (Transaction) fromClient.readObject(); //ISTO DA ERRO
 
@@ -499,7 +499,7 @@ public class Servidor implements Runnable {
                                         amount = amount + i.getAmount();
                                     }
                                 }
-                                System.out.println(amount);
+                              //  System.out.println(amount);
                                 if (amount >= transacao.getAmount()) {
                                     transacao.generateSignatureServer(serv.getPrivate());
                                     transacoes.add(transacao);
@@ -515,7 +515,7 @@ public class Servidor implements Runnable {
                             e.printStackTrace();
                         }
 
-                    } else if (line.contains("Montante//") == true) {
+                    } else if (line.contains("Montante/////") == true) {
 
                         ArrayList<Transaction> transacoes = new ArrayList<Transaction>();
                         ObjectInputStream ob = new ObjectInputStream(new FileInputStream("transacoes.txt"));
@@ -645,7 +645,7 @@ public class Servidor implements Runnable {
 
                             if (flag2 == 0) {
 
-                                String envia = k + "//" + bits;
+                                String envia = k + "/////" + bits;
                                 AESEncryption es = new AESEncryption();
                                 Session ra = new Session();
                                 for (int j = 0; j < sess.size(); j++) {
@@ -655,10 +655,10 @@ public class Servidor implements Runnable {
                                 }
                                 envia = es.encyrpt(envia, ra.getChaveB());
 
-                                String toCalcMac = "desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv();
+                                String toCalcMac = "desafio/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv();
                                 String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, ra.getChaveD()));
 
-                                printWriter.println("desafio//" + envia + "//" + es.getSalta() + "//" + es.getIv() + "//" + MAC);
+                                printWriter.println("desafio/////" + envia + "/////" + es.getSalta() + "/////" + es.getIv() + "/////" + MAC);
                                 printWriter.flush();
 
                                 System.out.println("Novo desafio enviado, com os bits em: " + bits);

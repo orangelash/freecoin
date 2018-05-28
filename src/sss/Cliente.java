@@ -179,11 +179,11 @@ public class Cliente {
                     //  while (!bufferedReader.readLine().isEmpty()) {
                     line = bufferedReader.readLine();
                     //System.out.println("2");
-                    String[] server = line.split("//");
+                    String[] server = line.split("/////");
                     //System.out.println("3");
                     if (server[0].equals("desafio")) {
 
-                        String toCalcMac = "desafio//" + server[1] + "//" + server[2] + "//" + server[3];
+                        String toCalcMac = "desafio/////" + server[1] + "/////" + server[2] + "/////" + server[3];
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
 
                         if (NovoMAC.equals(server[4])||!NovoMAC.equals(server[4])) {
@@ -192,7 +192,7 @@ public class Cliente {
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
                             String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
-                            String[] part = texto.split("//");
+                            String[] part = texto.split("/////");
 
                             desafio = part[0];
                             bitss = part[1];
@@ -202,7 +202,7 @@ public class Cliente {
                             System.out.println("1HMAC não confirmado!");
                         }
                     } else if (server[0].equals("desafiowin")) {
-                        String toCalcMac = "desafiowin//" + server[1] + "//" + server[2] + "//" + server[3];
+                        String toCalcMac = "desafiowin/////" + server[1] + "/////" + server[2] + "/////" + server[3];
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
                       //  System.out.println(server[4]);
                         // System.out.println(NovoMAC);
@@ -389,7 +389,7 @@ public class Cliente {
                                // System.out.println("resolvido");
                                 String hashsolved = previousHash;
                                // System.out.println(hashsolved);
-                                String enviar = desafio + "//" + bitss + "//resolvido//" + hashsolved + "//" + sslSocket.getLocalAddress();
+                                String enviar = desafio + "/////" + bitss + "/////resolvido/////" + hashsolved + "/////" + sslSocket.getLocalAddress();
                                 AESEncryption e = new AESEncryption();
                                 //System.out.println("A: ------------: " + s.getChaveA());
 
@@ -401,10 +401,10 @@ public class Cliente {
                                 //System.out.println("é igual? "+iv);
                               //  System.out.println("envio o salt: " + e.getSalta() + "envio o iv: " + e.getIv() + " enviar o tamanho do iv: " + e.getIv().length() + " a chave a usar: " + s.getChaveA() + "cripto: " + enviar);
 
-                                String toCalcMac = "desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv();
+                                String toCalcMac = "desafio/////" + enviar + "/////" + e.getSalta() + "/////" + e.getIv();
                                 String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveC()));
 
-                                printWriter.println("desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv() + "//" + MAC);
+                                printWriter.println("desafio/////" + enviar + "/////" + e.getSalta() + "/////" + e.getIv() + "/////" + MAC);
                                 printWriter.flush();
                                 /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
                                 printWriter.flush();*/
@@ -497,7 +497,7 @@ public class Cliente {
 
                                 byte[] publicKeyX = novasChaves.getPublic().getEncoded();
                                 String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
-                                printWriter.println("registar//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
+                                printWriter.println("registar/////" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
                                 printWriter.flush();
 
                                 // 4 - ESCREVER CERTIFICADO 
@@ -534,7 +534,7 @@ public class Cliente {
                                 byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
                                 String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
 
-                                printWriter.println("login//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
+                                printWriter.println("login/////" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
                                 printWriter.flush();
 
                                 // 2 - Fazer autenticação mutua (AMBOS TÊM CERTIFICADOS UM DO OUTRO)
@@ -553,7 +553,7 @@ public class Cliente {
                                 String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);
                                // System.out.println("" + ephemeralKeys.toString());
 
-                                printWriter.println("authDesafio//" + desafioEnviado + "//" + encodedPublicKey);
+                                printWriter.println("authDesafio/////" + desafioEnviado + "/////" + encodedPublicKey);
                                 printWriter.flush();
                                 //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
                                 sleep(1000);
@@ -613,7 +613,7 @@ public class Cliente {
                                     switch (opc2) {
                                         case 1: {
 
-                                            printWriter.println("transacao//.");
+                                            printWriter.println("transacao/////.");
                                             printWriter.flush();
                                             PublicKey pubAlice = null;
                                             PrivateKey privateKeyAlice = null;
@@ -661,12 +661,12 @@ public class Cliente {
                                             break;
                                         }
                                         case 2:
-                                            printWriter.println("Montante//.");
+                                            printWriter.println("Montante/////.");
                                             printWriter.flush();
                                             break;
 
                                         case 0: {
-                                            printWriter.println("LogOut//.");
+                                            printWriter.println("LogOut/////.");
                                             printWriter.flush();
                                             break;
                                         }
