@@ -210,7 +210,12 @@ public class Servidor implements Runnable {
          
                         if (NovoMACa.equals(recebido[4])) {
 
-                            AESEncryption e = new AESEncryption();
+                           continue;
+                        }else {
+                        System.out.println("1HMAC não confirmado!");
+                    }
+                        
+                         AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(recebido[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(recebido[3]);
 
@@ -294,9 +299,6 @@ public class Servidor implements Runnable {
                                 System.out.println("rebentou?");
                                 Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        }else {
-                        System.out.println("1HMAC não confirmado!");
-                    }
                     } 
                     if (line.contains("registar//") == true) {
 

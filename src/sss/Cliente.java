@@ -188,7 +188,12 @@ public class Cliente {
 
                         if (NovoMAC.equals(server[4])) {
 
-                            AESEncryption e = new AESEncryption();
+                           continue;
+                        } else {
+                            System.out.println("1HMAC não confirmado!");
+                        }
+                        
+                         AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
                             String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
@@ -198,24 +203,22 @@ public class Cliente {
                             bitss = part[1];
                            // System.out.println(bitss);
                             leu = 1;
-                        } else {
-                            System.out.println("1HMAC não confirmado!");
-                        }
                     } else if (server[0].equals("desafiowin")) {
                         String toCalcMac = "desafiowin//" + server[1] + "//" + server[2] + "//" + server[3];
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
                       //  System.out.println(server[4]);
                         // System.out.println(NovoMAC);
                         if (NovoMAC.equals(server[4])) {
-                            AESEncryption e = new AESEncryption();
+                           continue;
+                        } else {
+                            System.out.println("2HMAC não confirmado!");
+                        }
+                         AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
 
                             String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
                             System.out.println("" + texto);
-                        } else {
-                            System.out.println("2HMAC não confirmado!");
-                        }
 
                     } else if (server[0].equals("cadeia")) {
                       //  System.out.println("cadeia= " + server[1]);
@@ -260,7 +263,11 @@ public class Cliente {
                        // System.out.println(NovoMAC);
                       //  System.out.println(par[4]);
                         if (NovoMAC.equals(par[4])) {
-                            AESEncryption e = new AESEncryption();
+                            continue;
+                        } else {
+                            System.out.println("HMAC não confirmado!");
+                        }
+                        AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(par[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(par[3]);
                             String texto = e.decrypt(par[1], s.getChaveB(), salt, iv);
@@ -269,9 +276,6 @@ public class Cliente {
                             String aux = part[1].replace(".|", "\n").replace("\n\n", "\n");
                             System.out.println("" + aux);
                             System.out.println("O seu saldo é: " + part[0]);
-                        } else {
-                            System.out.println("HMAC não confirmado!");
-                        }
 
                     }
                 }
