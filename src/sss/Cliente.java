@@ -186,7 +186,7 @@ public class Cliente {
                         String toCalcMac = "desafio/////" + server[1] + "/////" + server[2] + "/////" + server[3];
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
 
-                        if (NovoMAC.equals(server[4])||!NovoMAC.equals(server[4])) {
+                        if (NovoMAC.equals(server[4])/*||!NovoMAC.equals(server[4])*/) {
 
                             AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
@@ -206,7 +206,7 @@ public class Cliente {
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
                       //  System.out.println(server[4]);
                         // System.out.println(NovoMAC);
-                        if (NovoMAC.equals(server[4])||!NovoMAC.equals(server[4])) {
+                        if (NovoMAC.equals(server[4])/*||!NovoMAC.equals(server[4])*/) {
                             AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
@@ -259,7 +259,7 @@ public class Cliente {
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
                        // System.out.println(NovoMAC);
                       //  System.out.println(par[4]);
-                        if (NovoMAC.equals(par[4])||!NovoMAC.equals(par[4])) {
+                        if (NovoMAC.equals(par[4])/*||!NovoMAC.equals(par[4])*/) {
                             AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(par[2]);
                             byte[] iv = new org.apache.commons.codec.binary.Base64().decode(par[3]);

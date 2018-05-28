@@ -208,7 +208,7 @@ public class Servidor implements Runnable {
                         String toCalcMaca = "desafio/////" + recebido[1] + "/////" + recebido[2] + "/////" + recebido[3];
                         String NovoMACa = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMaca, r.getChaveC()));
          
-                        if (NovoMACa.equals(recebido[4]) || !NovoMACa.equals(recebido[4])) {
+                        if (NovoMACa.equals(recebido[4]) /*|| !NovoMACa.equals(recebido[4])*/) {
 
                             AESEncryption e = new AESEncryption();
                             byte[] salt = new org.apache.commons.codec.binary.Base64().decode(recebido[2]);
