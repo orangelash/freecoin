@@ -12,14 +12,17 @@ import java.security.SecureRandom;
  *
  * @author Asus
  */
-public class rand  {
+public class rand {
+
+    static int count = 0;
 
     public static String randomnumber() {
         SecureRandom random = new SecureRandom();
         String k = new BigInteger(400, random).toString(32);
+        if (count!=0)
+            System.out.println("Novo desafio enviado");
+        count++;
         return k;
-        
+
     }
 }
-
-

@@ -182,47 +182,50 @@ public class Cliente {
                     String[] server = line.split("//");
                     //System.out.println("3");
                     if (server[0].equals("desafio")) {
-                        
-                        
-                        AESEncryption e = new AESEncryption();
-                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
-                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
-                        String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
-                        String[] part=texto.split("//");
-                        
-                        
-                        desafio = part[0];
-                        bitss = part[1];
-                        System.out.println(bitss);
-                        leu = 1;
 
+                        String toCalcMac = "desafio//" + server[1] + "//" + server[2] + "//" + server[3];
+                        String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
+
+                        if (NovoMAC.equals(server[4])) {
+
+                            AESEncryption e = new AESEncryption();
+                            byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
+                            byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
+                            String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
+                            String[] part = texto.split("//");
+
+                            desafio = part[0];
+                            bitss = part[1];
+                           // System.out.println(bitss);
+                            leu = 1;
+                        } else {
+                            System.out.println("1HMAC não confirmado!");
+                        }
                     } else if (server[0].equals("desafiowin")) {
-
-                        AESEncryption e = new AESEncryption();
-                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
-                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
-
-                        
-                        String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
-                        System.out.println("" + texto);
-                        
-                        //TODO: VER ISTO!                        
                         String toCalcMac = "desafiowin//" + server[1] + "//" + server[2] + "//" + server[3];
                         String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
-                        
-                        System.out.println("recebido:"+server[4]);
-                        System.out.println("calculado:"+NovoMAC);
-                        System.out.println(toCalcMac.equalsIgnoreCase(NovoMAC));
+                      //  System.out.println(server[4]);
+                        // System.out.println(NovoMAC);
+                        if (NovoMAC.equals(server[4])) {
+                            AESEncryption e = new AESEncryption();
+                            byte[] salt = new org.apache.commons.codec.binary.Base64().decode(server[2]);
+                            byte[] iv = new org.apache.commons.codec.binary.Base64().decode(server[3]);
+
+                            String texto = e.decrypt(server[1], s.getChaveB(), salt, iv);
+                            System.out.println("" + texto);
+                        } else {
+                            System.out.println("2HMAC não confirmado!");
+                        }
 
                     } else if (server[0].equals("cadeia")) {
-                        System.out.println("cadeia= " + server[1]);
+                      //  System.out.println("cadeia= " + server[1]);
                         /*byte[] byteArr = server[1].getBytes();
                         byte[] cadeia = Base64.getDecoder().decode(server[1]);
                         System.out.println(byteArr);
                         System.out.println("aqui: " + server[1].getBytes(StandardCharsets.UTF_8));*/
 
                         X509Certificate cert = (X509Certificate) fromClient.readObject();
-                        System.out.println(cert);
+                       // System.out.println(cert);
                         certi = cert;
 
                         //keyUtils.bytesToHex(server[1]);
@@ -231,12 +234,12 @@ public class Cliente {
                         String path = Paths.get("").toAbsolutePath().toString();
                         KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
                         byte[] sign = StringUtil.applyECDSASig(clienteKeys.getPrivate(), server[1]);
-                        System.out.println("envia men");
+                       // System.out.println("envia men");
                         toServer.writeObject(sign);
-                        System.out.println("ja ");
-                        System.out.println("" + Arrays.toString(sign));
+                       // System.out.println("ja ");
+                      //  System.out.println("" + Arrays.toString(sign));
                         respostaDesafio = (byte[]) fromClient.readObject();
-                        System.out.println("" + Arrays.toString(respostaDesafio));
+                     //   System.out.println("" + Arrays.toString(respostaDesafio));
                     } else if (line.contains("Montante")) {
                         // String path = Paths.get("").toAbsolutePath().toString();
                         // KeyPair clienteKeys = keyUtils.LoadKeyPair(path, "ECDSA");
@@ -250,17 +253,26 @@ public class Cliente {
 //                            else
 //                                System.out.println("Sender: "+tran.get(i).getSenderPublicKey()+"\nReceiver: "+tran.get(i).getReceiverPublicKey()+"\nAmount: +"+tran.get(i).getAmount());
 //                        }
-                        String []par=line.split("/////");
-                        AESEncryption e = new AESEncryption();
-                        byte[] salt = new org.apache.commons.codec.binary.Base64().decode(par[2]);
-                        byte[] iv = new org.apache.commons.codec.binary.Base64().decode(par[3]);
-                        String texto = e.decrypt(par[1], s.getChaveB(), salt, iv);
-                        String[] part=texto.split("/////");
-                        
+                       // System.out.println(line);
+                        String[] par = line.split("/////");
+                        String toCalcMac = "Montante/////" + par[1] + "/////" + par[2] + "/////" + par[3];
+                        String NovoMAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveD()));
+                       // System.out.println(NovoMAC);
+                      //  System.out.println(par[4]);
+                        if (NovoMAC.equals(par[4])) {
+                            AESEncryption e = new AESEncryption();
+                            byte[] salt = new org.apache.commons.codec.binary.Base64().decode(par[2]);
+                            byte[] iv = new org.apache.commons.codec.binary.Base64().decode(par[3]);
+                            String texto = e.decrypt(par[1], s.getChaveB(), salt, iv);
+                            String[] part = texto.split("/////");
 
-                        String aux = part[1].replace(".|", "\n").replace("\n\n", "\n");
-                        System.out.println("" + aux);
-                        System.out.println("O seu saldo é: " + part[0]);
+                            String aux = part[1].replace(".|", "\n").replace("\n\n", "\n");
+                            System.out.println("" + aux);
+                            System.out.println("O seu saldo é: " + part[0]);
+                        } else {
+                            System.out.println("HMAC não confirmado!");
+                        }
+
                     }
                 }
 
@@ -363,7 +375,7 @@ public class Cliente {
                                 }
 
                                 if (count >= bits && flag == 0) {
-                                    System.out.println("encontrei");
+                                   // System.out.println("encontrei");
                                     foudIt = 1;
                                     //leu=0;
                                     break;
@@ -373,25 +385,25 @@ public class Cliente {
                                 }
 
                             }
-                            if (count >= bits && flag == 0) {                          
-
+                            if (count >= bits && flag == 0) {
+                               // System.out.println("resolvido");
                                 String hashsolved = previousHash;
-                                System.out.println(hashsolved);
+                               // System.out.println(hashsolved);
                                 String enviar = desafio + "//" + bitss + "//resolvido//" + hashsolved + "//" + sslSocket.getLocalAddress();
                                 AESEncryption e = new AESEncryption();
-                                System.out.println("A: ------------: " + s.getChaveA());
+                                //System.out.println("A: ------------: " + s.getChaveA());
 
                                 enviar = e.encyrpt(enviar, s.getChaveA());
                                 byte[] salt = new org.apache.commons.codec.binary.Base64().decode(e.getSalta());
                                 byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
-                                System.out.println(e.decrypt(enviar, s.getChaveA(), salt, iv));
+                             //   System.out.println(e.decrypt(enviar, s.getChaveA(), salt, iv));
                                 // byte[] iv = new org.apache.commons.codec.binary.Base64().decode(e.getIv());
                                 //System.out.println("é igual? "+iv);
-                                System.out.println("envio o salt: " + e.getSalta() + "envio o iv: " + e.getIv() + " enviar o tamanho do iv: " + e.getIv().length() + " a chave a usar: " + s.getChaveA() + "cripto: " + enviar);
-                                
+                              //  System.out.println("envio o salt: " + e.getSalta() + "envio o iv: " + e.getIv() + " enviar o tamanho do iv: " + e.getIv().length() + " a chave a usar: " + s.getChaveA() + "cripto: " + enviar);
+
                                 String toCalcMac = "desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv();
-                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveB()));
-                                
+                                String MAC = Base64.getEncoder().encodeToString(StringUtil.generateHMac(toCalcMac, s.getChaveC()));
+
                                 printWriter.println("desafio//" + enviar + "//" + e.getSalta() + "//" + e.getIv() + "//" + MAC);
                                 printWriter.flush();
                                 /* printWriter.println("desafio//" + desafio + "//" + bitss + "//resolvido//" + hashsolved + "/" + sslSocket.getLocalAddress());
@@ -493,7 +505,7 @@ public class Cliente {
                                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                                 try {
                                     certi.verify(server);
-                                    System.out.println("verificado");
+                                   // System.out.println("verificado");
                                     FileOutputStream fout = new FileOutputStream(path + "/meu.cer");
                                     fout.write(certi.getEncoded());
                                     fout.close();
@@ -509,7 +521,7 @@ public class Cliente {
                         }
                         case 2: {
                             boolean continua = false;
-                            System.out.println("entrar");
+                           // System.out.println("entrar");
                             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
                             String path = Paths.get("").toAbsolutePath().toString();
 
@@ -517,46 +529,47 @@ public class Cliente {
                             PublicKey server = keyUtils.LoadServerPublicKey(path, "ECDSA");
 
                             // 1 - Enviar public key ao servidor, ele verifica se está registado
-                             KeyPair ephemeralKeys = null;
+                            KeyPair ephemeralKeys = null;
                             try {
-                            byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
-                            String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
+                                byte[] publicKeyX = clienteKeys.getPublic().getEncoded();
+                                String encodedPublicKeyX = Base64.getEncoder().encodeToString(publicKeyX);
 
-                            printWriter.println("login//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
-                            printWriter.flush();
+                                printWriter.println("login//" + encodedPublicKeyX); //VERIFICAR ISTO, ESTÁ A ENVAIR UMA PUBLIC KEY
+                                printWriter.flush();
 
-                            // 2 - Fazer autenticação mutua (AMBOS TÊM CERTIFICADOS UM DO OUTRO)
-                            SecureRandom random = new SecureRandom();
+                                // 2 - Fazer autenticação mutua (AMBOS TÊM CERTIFICADOS UM DO OUTRO)
+                                SecureRandom random = new SecureRandom();
 
-                            int max = 500;
-                            int min = 10;
+                                int max = 500;
+                                int min = 10;
 
-                            int aux = random.nextInt(max - min + 1) + min;
+                                int aux = random.nextInt(max - min + 1) + min;
 
-                            RandomString desafio = new RandomString(aux);
-                            String desafioEnviado = desafio.nextString();
+                                RandomString desafio = new RandomString(aux);
+                                String desafioEnviado = desafio.nextString();
 
-                             ephemeralKeys = keyUtils.generateKeyPairPrime192();
-                            byte[] publicKey = ephemeralKeys.getPublic().getEncoded();
-                            String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);
-                            System.out.println("" + ephemeralKeys.toString());
+                                ephemeralKeys = keyUtils.generateKeyPairPrime192();
+                                byte[] publicKey = ephemeralKeys.getPublic().getEncoded();
+                                String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey);
+                               // System.out.println("" + ephemeralKeys.toString());
 
-                            printWriter.println("authDesafio//" + desafioEnviado + "//" + encodedPublicKey);
-                            printWriter.flush();
-                            //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
-                            sleep(1000);
-                            try {
-                                if (StringUtil.verifyECDSASig(server, desafioEnviado, respostaDesafio)) {
-                                    System.out.println("Desafio correto, servidor autenticado.");
-                                    continua = true;
-                                } else {
+                                printWriter.println("authDesafio//" + desafioEnviado + "//" + encodedPublicKey);
+                                printWriter.flush();
+                                //  2.1) Ler certificados, ver se estão corretos, assinar um desafio recebido e enviar
+                                sleep(1000);
+                                try {
+                                    if (StringUtil.verifyECDSASig(server, desafioEnviado, respostaDesafio)) {
+                                        System.out.println("Desafio correto, servidor autenticado.");
+                                        continua = true;
+                                    } else {
+                                        System.out.println("Desafio incorreto, servidor não autenticado.");
+                                        continua = false;
+                                    }
+                                } catch (Exception e) {
                                     System.out.println("Desafio incorreto, servidor não autenticado.");
                                     continua = false;
                                 }
-                            } catch (Exception e) {
-                                System.out.println("Desafio incorreto, servidor não autenticado.");
-                                continua = false;
-                            }} catch (NullPointerException e) {
+                            } catch (NullPointerException e) {
                                 continua = false;
                             }
                             //  2.2) ver se o desafio que o servidor assinou está correto com o certificado dele, se sim, continuar, caso contrário aborta
@@ -564,7 +577,7 @@ public class Cliente {
                             if (continua == true) {
                                 new ClientThread(sslSocket, queue).start();
                                 byte[] sessionKey = keyUtils.doECDH(ephemeralKeys.getPrivate(), server);
-                                System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
+                               // System.out.println("Chave de Sessão: " + keyUtils.bytesToHex(sessionKey));
                                 byte[] sessionKeyA = new byte[sessionKey.length + 1];
                                 byte[] sessionKeyB = new byte[sessionKey.length + 1];
                                 byte[] sessionKeyC = new byte[sessionKey.length + 1];
@@ -613,7 +626,7 @@ public class Cliente {
                                                 privateKeyAlice = alice.getPrivate();
                                                 pubAlice = alice.getPublic();
                                             } catch (Exception e) {
-                                                System.out.println("rebentei todo");
+                                                System.out.println("rebentei ");
                                             }
 
                                             System.out.println("Insira o valor a transferir");
@@ -638,13 +651,13 @@ public class Cliente {
                                                     System.out.println("deu aqui");
                                                 }
                                             } while (destinatario == null);
-                                            System.out.println("meueuuuu jardimmmmmmmmmmmmmm");
+                                           // System.out.println("meueuuuu jardimmmmmmmmmmmmmm");
                                             Transaction transacao = new Transaction(pubAlice, destinatario, valorEnviar);
                                             transacao.generateSignature(privateKeyAlice);
-                                            System.out.println("Transacao => " + transacao.toString());
+                                           // System.out.println("Transacao => " + transacao.toString());
 
                                             toServer.writeObject(transacao);
-                                            System.out.println("enviei");
+                                            System.out.println("Transação efetuada");
                                             break;
                                         }
                                         case 2:

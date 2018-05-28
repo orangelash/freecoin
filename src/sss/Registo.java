@@ -13,10 +13,7 @@ import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.*;
 
-/**
- *
- * @author Vasco Lopes
- */
+
 public class Registo {
     public static void main(String args[]) {
         try {

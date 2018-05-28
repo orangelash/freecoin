@@ -35,8 +35,8 @@ public class VerifyChallenge {
     public static Boolean verify(String hexaV, String hexaD, int bits) throws NoSuchAlgorithmException {
         String binarioV = hexToBinary(hexaV);
         String binarioD = hexToBinary(hexaD);
-        System.out.println(binarioV);
-        System.out.println(binarioD);
+        //System.out.println(binarioV);
+        //System.out.println(binarioD);
         String[] arys1 = binarioV.split("");
         String[] arys2 = binarioD.split("");
         for (int i = 0; i < bits; i++) {

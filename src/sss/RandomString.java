@@ -8,10 +8,7 @@ package sss;
 import java.security.SecureRandom;
 import java.util.Random;
 
-/**
- *
- * @author Vasco Lopes
- */
+
 public final class RandomString
 {
 

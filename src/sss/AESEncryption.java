@@ -60,7 +60,7 @@ public class AESEncryption {
          byte[] bytes=hexStringToByteArray(secKey);
        SecretKey originalKey = new SecretKeySpec(bytes, 0, 16, "AES");
         //AES initialization
-        System.out.println(bytes.length);
+ 
         Cipher cipher = Cipher.getInstance(encryptAlgorithm);
         cipher.init(Cipher.ENCRYPT_MODE, originalKey);
 
@@ -87,7 +87,7 @@ public class AESEncryption {
         //byte[] bytes = new BigInteger("7F" + secKey, 16).toByteArray();
         SecretKey originalKey = new SecretKeySpec(bytes, 0, 16, "AES");
         Cipher cipher = Cipher.getInstance(encryptAlgorithm);
-        System.out.println(iv.toString());
+
         cipher.init(Cipher.DECRYPT_MODE, originalKey, new IvParameterSpec(iv));
 
         byte[] decyrptTextBytes = cipher.doFinal(encryptTextBytes);
